@@ -9,7 +9,7 @@ export class ExpedienteController {
 
   @Post()
   create(@Body() createExpedienteDto: CreateExpedienteDto) {
-    return this.expedienteService.create(createExpedienteDto);
+    return this.expedienteService.createExpediente(createExpedienteDto);
   }
 
   @Get()
