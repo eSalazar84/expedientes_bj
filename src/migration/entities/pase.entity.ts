@@ -1,11 +1,11 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Expediente } from "./expediente.entity";
-import { Dependencia } from "../../organigrama/entities/dependencia.entity";
+import { Expediente } from "../../expediente/entities/expediente.entity";
+import { Dependencia } from "src/organigrama/entities/dependencia.entity";
 
 @Entity()
 export class Pase {
     @PrimaryGeneratedColumn()
-    id: number
+    idPase: number
 
     @ManyToOne(() => Expediente, (expediente) => expediente.pases)
     expediente: Expediente

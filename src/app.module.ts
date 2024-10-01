@@ -4,7 +4,8 @@ import { AppService } from './app.service';
 import { MigrationModule } from './migration/migration.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { OrganigramaModule } from './organigrama/organigrama.module';
+import { DependenciaModule } from './organigrama/dependencia.module';
+import { ExpedienteModule } from './expediente/expediente.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { OrganigramaModule } from './organigrama/organigrama.module';
       synchronize: true
     }),
     MigrationModule,
-    OrganigramaModule
+    DependenciaModule,
+    ExpedienteModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-export enum Organigrama {
+export enum DependenciaEnum {
     OBRAS_PARTICULARES = 'OBRAS PARTICULARES',
     OBRAS_SANITARIAS = 'OBRAS_SANITARIAS',
     OBRAS_PUBLICAS = 'OBRAS_PUBLICAS',

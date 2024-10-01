@@ -4,7 +4,7 @@ import { UpdateMigrationDto } from './dto/update-migration.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
-import { Expediente } from './entities/expediente.entity';
+import { Expediente } from '../expediente/entities/expediente.entity';
 import * as fs from 'fs'
 
 
