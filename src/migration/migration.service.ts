@@ -1,8 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateMigrationDto } from './dto/create-migration.dto';
-import { UpdateMigrationDto } from './dto/update-migration.dto';
 import { Expediente } from '../expediente/entities/expediente.entity';
-import { Pase } from './entities/pase.entity';
+import { Pase } from '../pase/entities/pase.entity';
 import * as fastCsv from 'fast-csv';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -276,7 +274,7 @@ export class MigrationService {
     return expedienteFound;
   }
 
-  update(id: number, updateMigrationDto: UpdateMigrationDto) {
+  update(id: number, updateMigrationDto ) {
     return `This action updates a #${id} migration`;
   }
 

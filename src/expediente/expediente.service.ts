@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
 import { Repository } from 'typeorm';
-import { Pase } from 'src/migration/entities/pase.entity';
+import { Pase } from 'src/pase/entities/pase.entity';
 
 @Injectable()
 export class ExpedienteService {
@@ -27,7 +27,6 @@ export class ExpedienteService {
     if (!dependencia) {
       throw new NotFoundException('Dependencia no encontrada');
     }
-
 
     // 2. Obtener la letra asignada a la dependencia
     const letraAsignada = dependencia.nombre_dependencia[0]; // Asignar la primera letra del nombre de la dependencia como letra_identificadora
