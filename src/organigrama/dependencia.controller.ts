@@ -4,7 +4,7 @@ import { CreateDependenciaDto } from './dto/create-dependencia.dto';
 import { UpdateDependenciaDto } from './dto/update-dependencia.dto';
 import { Dependencia } from './entities/dependencia.entity';
 
-@Controller('Dependencia')
+@Controller('dependencia')
 export class DependenciaController {
   constructor(private readonly dependenciaService: DependenciaService) { }
 

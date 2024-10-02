@@ -4,7 +4,7 @@ export class CreateDependenciaDto {
 
     @IsString()
     @IsNotEmpty()
-    dependencia: string
+    nombre_dependencia: string
 
     @IsOptional()
     @Matches(/^[+\d\s-]+$/, { message: 'El número de teléfono contiene caracteres no permitidos.' })

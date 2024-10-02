@@ -15,11 +15,11 @@ export class DependenciaService {
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
     // Normalizar el valor ingresado por el usuario
-    const dependenciaNormalizada = createDependenciaDto.dependencia.trim().toUpperCase();
+    const dependenciaNormalizada = createDependenciaDto.nombre_dependencia.trim().toUpperCase();
 
     // Buscar la dependencia con el nombre normalizado
     const DependenciaFound = await this.dependenciaRepository.findOne({
-      where: { dependencia: dependenciaNormalizada },
+      where: { nombre_dependencia: dependenciaNormalizada },
     });
 
     // Si ya existe, lanzar una excepción de conflicto
@@ -33,7 +33,7 @@ export class DependenciaService {
     // Crear una nueva dependencia con el nombre normalizado
     const newDependencia = this.dependenciaRepository.create({
       ...createDependenciaDto,
-      dependencia: dependenciaNormalizada,  // Guardar el nombre normalizado
+      nombre_dependencia: dependenciaNormalizada,  // Guardar el nombre normalizado
     });
 
     // Guardar la nueva dependencia en la base de datos
@@ -49,7 +49,7 @@ export class DependenciaService {
 
     // Buscar la dependencia con el nombre normalizado
     const DependenciaFound = await this.dependenciaRepository.findOne({
-      where: { dependencia: dependenciaNormalizada },
+      where: { nombre_dependencia: dependenciaNormalizada },
     });
 
     // Si ya existe, lanzar una excepción de conflicto
