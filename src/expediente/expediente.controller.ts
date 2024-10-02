@@ -2,14 +2,15 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ExpedienteService } from './expediente.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
+import { Expediente } from './entities/expediente.entity';
 
 @Controller('expediente')
 export class ExpedienteController {
-  constructor(private readonly expedienteService: ExpedienteService) {}
+  constructor(private readonly expedienteService: ExpedienteService) { }
 
   @Post()
-  create(@Body() createExpedienteDto: CreateExpedienteDto) {
-    return this.expedienteService.createExpediente(createExpedienteDto);
+  async create(@Body() createExpedienteDto: CreateExpedienteDto): Promise<Expediente> {
+    return await this.expedienteService.createExpediente(createExpedienteDto);
   }
 
   @Get()

@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, HttpStatus, ParseIntPipe, HttpException } from '@nestjs/common';
 import { MigrationService } from './migration.service';
-import { UpdateMigrationDto } from './dto/update-migration.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
@@ -53,7 +52,7 @@ export class MigrationController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMigrationDto: UpdateMigrationDto) {
+  update(@Param('id') id: string, @Body() updateMigrationDto) {
     return this.migrationService.update(+id, updateMigrationDto);
   }
 

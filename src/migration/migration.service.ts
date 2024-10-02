@@ -1,8 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateMigrationDto } from './dto/create-migration.dto';
-import { UpdateMigrationDto } from './dto/update-migration.dto';
 import { Expediente } from '../expediente/entities/expediente.entity';
-import { Pase } from './entities/pase.entity';
+import { Pase } from '../pase/entities/pase.entity';
 import * as fastCsv from 'fast-csv';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,102 +18,6 @@ export class MigrationService {
     @InjectRepository(Dependencia)
     private readonly dependenciaRepository: Repository<Dependencia>
   ) { }
-
-  /* async migrateCSV(filePath: string): Promise<{ status: number; message: string }> {
-    return new Promise((resolve, reject) => {
-      const expedientesMap = new Map<number, Expediente>(); // Mapa para expedientes, ahora por ID
-
-      const stream = fs.createReadStream(filePath);
-      const csvParser = fastCsv.parse({ headers: true, delimiter: ',' });
-
-      stream.pipe(csvParser)
-        .on('data', async (row) => {
-          try {
-            //para crear el origen del expediente
-            // Buscar si la dependencia ya existe en la base de datos
-            let guardarDependencia = await this.dependenciaRepository.findOne({
-              where: { dependencia: row.CODIGO },
-            });
-
-            if (!guardarDependencia) {
-              // Si no existe, crea y guarda una nueva dependencia
-              const dependenciaData = {
-                dependencia: row.CODIGO,
-              };
-
-              const asignarDependencia = this.dependenciaRepository.create(dependenciaData);
-              guardarDependencia = await this.dependenciaRepository.save(asignarDependencia);
-            }
-
-            // Procesar las columnas para crear el expediente
-            const expedienteData = {
-              anio_expediente: parseInt(row.ANIO, 10),
-              letra_identificadora: row.LETRA,
-              nro_expediente: parseInt(row.NRO, 10),
-              ruta_expediente: row.RUTA,
-              dependencia: { id: guardarDependencia.id },
-              titulo_expediente: row.NOM,
-              descripcion: `${row.MOTIVO1} ${row.MOTIVO2 || ''}`.trim(), // Juntamos MOTIVO1 y MOTIVO2
-            };
-
-            // Crear y guardar el expediente en la base de datos
-            let expediente = this.expedienteRepository.create(expedienteData);
-            expediente = await this.expedienteRepository.save(expediente);
-
-            // Usamos el `id` generado por la base de datos como clave en el mapa
-            expedientesMap.set(expediente.id, expediente);
-
-            // Crear pases
-            for (let i = 1; i <= 25; i++) {
-              const fechaCol = row[`F${i}`];
-              const horaCol = row[`H${i}`];
-              const paseCol = row[`P${i}`];
-
-              if (fechaCol && horaCol && paseCol) {
-                // Buscar si la dependencia destino ya existe
-                let destinoDependencia = await this.dependenciaRepository.findOne({
-                  where: { dependencia: paseCol },
-                });
-
-                if (!destinoDependencia) {
-                  // Si no existe, crea una nueva dependencia destino
-                  const destinoDependenciaData = {
-                    dependencia: paseCol,
-                  };
-                  destinoDependencia = this.dependenciaRepository.create(destinoDependenciaData);
-                  destinoDependencia = await this.dependenciaRepository.save(destinoDependencia);
-                }
-
-                const pase = this.paseRepository.create({
-                  expediente,
-                  fecha_hora_migracion: new Date(`${fechaCol} ${horaCol}`), // Formateamos fecha y hora
-                  destino: { id: destinoDependencia.id },
-                });
-
-                await this.paseRepository.save(pase);
-              }
-            }
-          } catch (error) {
-            reject({
-              status: HttpStatus.INTERNAL_SERVER_ERROR,
-              message: `Migration failed: ${error.message}`,
-            });
-          }
-        })
-        .on('end', () => {
-          resolve({
-            status: HttpStatus.CREATED,
-            message: `Migration completed successfully.`,
-          });
-        })
-        .on('error', (error) => {
-          reject({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            message: `Error during CSV migration: ${error.message}`,
-          });
-        });
-    });
-  } */
 
   /* async migrateCSV(filePath: string): Promise<{ status: number; message: string }> {
     return new Promise((resolve, reject) => {
@@ -293,26 +195,35 @@ export class MigrationService {
               if (fechaCol && horaCol && paseCol) {
                 const paseDependenciaCodigo = paseCol.trim().toUpperCase();
 
-                // Verificar si la dependencia destino ya está en el mapa
-                let destinoDependencia = dependenciasMap.get(paseDependenciaCodigo);
+                // Declarar la variable destinoDependencia
+                let destinoDependencia: Dependencia;
 
-                if (!destinoDependencia) {
-                  // Si no está en el mapa, buscar en la base de datos
-                  destinoDependencia = await this.dependenciaRepository.findOne({
-                    where: { nombre_dependencia: paseDependenciaCodigo },
-                  });
+                // Verificar si el pase es hacia la misma dependencia del expediente
+                if (paseDependenciaCodigo === codigoDependencia) {
+                  // Si es la misma dependencia, reutilizar la dependencia ya asociada al expediente
+                  destinoDependencia = guardarDependencia;
+                } else {
+                  // Verificar si la dependencia destino ya está en el mapa
+                  let destinoDependencia = dependenciasMap.get(paseDependenciaCodigo);
 
                   if (!destinoDependencia) {
-                    // Si no existe, crear y guardar una nueva dependencia destino
-                    const destinoDependenciaData = {
-                      nombre_dependencia: paseDependenciaCodigo,
-                    };
-                    destinoDependencia = this.dependenciaRepository.create(destinoDependenciaData);
-                    destinoDependencia = await this.dependenciaRepository.save(destinoDependencia);
-                  }
+                    // Si no está en el mapa, buscar en la base de datos
+                    destinoDependencia = await this.dependenciaRepository.findOne({
+                      where: { nombre_dependencia: paseDependenciaCodigo },
+                    });
 
-                  // Guardar la dependencia destino en el mapa
-                  dependenciasMap.set(paseDependenciaCodigo, destinoDependencia);
+                    if (!destinoDependencia) {
+                      // Si no existe, crear y guardar una nueva dependencia destino
+                      const destinoDependenciaData = {
+                        nombre_dependencia: paseDependenciaCodigo,
+                      };
+                      destinoDependencia = this.dependenciaRepository.create(destinoDependenciaData);
+                      destinoDependencia = await this.dependenciaRepository.save(destinoDependencia);
+                    }
+
+                    // Guardar la dependencia destino en el mapa
+                    dependenciasMap.set(paseDependenciaCodigo, destinoDependencia);
+                  }
                 }
 
                 // Crear y guardar el pase
@@ -363,7 +274,7 @@ export class MigrationService {
     return expedienteFound;
   }
 
-  update(id: number, updateMigrationDto: UpdateMigrationDto) {
+  update(id: number, updateMigrationDto ) {
     return `This action updates a #${id} migration`;
   }
 

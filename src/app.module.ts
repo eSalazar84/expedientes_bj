@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { DependenciaModule } from './organigrama/dependencia.module';
 import { ExpedienteModule } from './expediente/expediente.module';
+import { PaseModule } from './pase/pase.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { ExpedienteModule } from './expediente/expediente.module';
     }),
     MigrationModule,
     DependenciaModule,
-    ExpedienteModule
+    ExpedienteModule,
+    PaseModule
   ],
   controllers: [AppController],
   providers: [AppService],

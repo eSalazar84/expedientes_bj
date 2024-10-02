@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Pase } from "../../migration/entities/pase.entity";
+import { Pase } from "../../pase/entities/pase.entity";
 import { Dependencia } from "src/organigrama/entities/dependencia.entity";
 
 @Entity()
