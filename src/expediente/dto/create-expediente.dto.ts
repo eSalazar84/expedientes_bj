@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateExpedienteDto {
 
@@ -12,4 +12,8 @@ export class CreateExpedienteDto {
     @IsString()
     @IsNotEmpty()
     descripcion: string; // Descripción proporcionada por el usuario
+
+    // Solo obligatorio si la dependencia es PERMISOS o HABILITACIONES
+    @IsOptional()
+    apellidoSolicitante?: string;
 }
