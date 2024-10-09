@@ -9,7 +9,7 @@ export class PaseController {
   constructor(private readonly paseService: PaseService) {}
 
   @Post()
-  async create(@Body() createPaseDto: CreatePaseDto):Promise<Pase> {
+  async createPase(@Body() createPaseDto: CreatePaseDto):Promise<Pase> {
     return await this.paseService.createPase(createPaseDto);
   }
 

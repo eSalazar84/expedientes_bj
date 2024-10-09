@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MigrationModule } from './migration/migration.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
@@ -27,7 +25,7 @@ import { PaseModule } from './pase/pase.module';
     ExpedienteModule,
     PaseModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule { }

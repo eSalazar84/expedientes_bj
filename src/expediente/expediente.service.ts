@@ -1,12 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { Repository } from 'typeorm';
-import { Pase } from 'src/pase/entities/pase.entity';
-import { DependenciaEnum } from 'src/utils/enums/organigrama.enum';
+import { FindOneOptions, Repository } from 'typeorm';
+import { DependenciaEnum } from 'src/organigrama/enums/organigrama.enum';
+import { Iexpediente } from './interface/expediente.interface';
 
 @Injectable()
 export class ExpedienteService {
@@ -90,7 +90,7 @@ export class ExpedienteService {
       throw new NotFoundException('Expediente no encontrado');
     }
 
-    const totalPases = expediente.pases.length;    
+    const totalPases = expediente.pases.length;
     const nuevaRuta = Math.floor(totalPases / 25) + 1;
 
     // Solo actualiza la ruta si ha cambiado
@@ -100,12 +100,58 @@ export class ExpedienteService {
     }
   }
 
-  findAll() {
-    return `This action returns all expediente`;
+  async findAllExpedientes(): Promise<CreateExpedienteDto[]> {
+    const expedientes = await this.expedienteRepository.find({ relations: ['pases', 'dependencia', 'pases.destino'] });
+
+    return expedientes.map(expediente => ({
+      idExpediente: expediente.idExpediente,
+      anio_expediente: expediente.anio_expediente,
+      letra_identificadora: expediente.letra_identificadora,
+      nro_expediente: expediente.nro_expediente,
+      ruta_expediente: expediente.ruta_expediente,
+      titulo_expediente: expediente.titulo_expediente,
+      descripcion: expediente.descripcion,
+      dependenciaId: expediente.dependencia ? expediente.dependencia.idDependencia : null,
+      pases: expediente.pases.map(pase => ({
+        idPase: pase.idPase,
+        fecha_pase: pase.fecha_pase,
+        destino: pase.destino ? {
+          idDependencia: pase.destino.idDependencia,
+          nombre_dependencia: pase.destino.nombre_dependencia
+        } : null
+      }))
+    }));
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} expediente`;
+  async findOneExpediente(id: number): Promise<Iexpediente> {
+    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia', 'pases.destino'] }
+    const expedienteFound = await this.expedienteRepository.findOne(query)
+    if (!expedienteFound) throw new HttpException({
+      status: HttpStatus.NOT_FOUND,
+      error: `No existe el expediente que esta buscando`
+    }, HttpStatus.NOT_FOUND)
+
+    return {
+      idExpediente: expedienteFound.idExpediente,
+      anio_expediente: expedienteFound.anio_expediente,
+      letra_identificadora: expedienteFound.letra_identificadora,
+      nro_expediente: expedienteFound.nro_expediente,
+      ruta_expediente: expedienteFound.ruta_expediente,
+      titulo_expediente: expedienteFound.titulo_expediente,
+      descripcion: expedienteFound.descripcion,
+      dependencia: {
+        idDependencia: expedienteFound.dependencia ? expedienteFound.dependencia.idDependencia : null,
+        nombre_dependencia: expedienteFound.dependencia.nombre_dependencia
+      },
+      pases: expedienteFound.pases.map(pase => ({
+        idPase: pase.idPase,
+        fecha_pase: pase.fecha_pase,
+        destino: pase.destino ? {
+          idDependencia: pase.destino.idDependencia,
+          nombre_dependencia: pase.destino.nombre_dependencia
+        } : null
+      }))
+    };
   }
 
   update(id: number, updateExpedienteDto: UpdateExpedienteDto) {

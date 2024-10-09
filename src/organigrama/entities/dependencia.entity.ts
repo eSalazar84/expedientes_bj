@@ -1,4 +1,4 @@
-import { DependenciaEnum } from "src/utils/enums/organigrama.enum";
+import { DependenciaEnum } from "src/organigrama/enums/organigrama.enum";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Expediente } from "../../expediente/entities/expediente.entity";
 import { Pase } from "../../pase/entities/pase.entity";

@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateExpedienteDto {
+    idExpediente:number
 
     @IsNumber()
     dependenciaId: number; // ID de la dependencia que crea el expediente
