@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Pase } from "../../pase/entities/pase.entity";
 import { Dependencia } from "src/organigrama/entities/dependencia.entity";
 
@@ -25,12 +25,13 @@ export class Expediente {
     @Column()
     descripcion: string
 
-    // Un expediente puede tener múltiples pases
-    @OneToMany(() => Pase, (pase) => pase.expediente)
-    pases: Pase[];
+    @Column({ type: "int" })
+    dependenciaId: number
 
-    // Muchos expedientes pueden estar relacionados con una única dependencia
     @ManyToOne(() => Dependencia, (dependencia) => dependencia.expedientes)
-    dependencia: Dependencia;
+    @JoinColumn({ name: 'dependenciaId' })
+    dependencia: Dependencia
 
+    @OneToMany(() => Pase, (pase) => pase.expediente)
+    pases: Pase[]
 }

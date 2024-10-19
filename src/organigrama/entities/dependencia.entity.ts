@@ -23,13 +23,9 @@ export class Dependencia {
     @Column({ type: 'varchar', length: 60, nullable: true })
     email_dependencia: string | null
 
-    // Relación de ManyToOne entre Dependencia y Expedientes
-    // Una dependencia puede estar relacionada con múltiples expedientes
     @OneToMany(() => Expediente, (expediente) => expediente.dependencia)
-    expedientes: Expediente[];
+    expedientes: Expediente[]
 
-    // Relación de ManyToOne entre Dependencia y Pases
-    // Una dependencia puede ser el destino de múltiples pases
-    @OneToMany(() => Pase, (pase) => pase.destino)
-    destino_pases: Pase[];
+    @OneToMany(() => Pase, (pase) => pase.dependenciaId)
+    pases: Pase[]
 }

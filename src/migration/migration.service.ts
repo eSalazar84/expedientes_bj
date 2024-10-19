@@ -230,7 +230,7 @@ export class MigrationService {
                 const pase = this.paseRepository.create({
                   expediente,
                   fecha_hora_migracion: new Date(`${fechaCol} ${horaCol}`),
-                  destino: destinoDependencia,
+                  dependenciaId: destinoDependencia.idDependencia,
                 });
 
                 await this.paseRepository.save(pase);
@@ -258,14 +258,12 @@ export class MigrationService {
     });
   }
 
-
-
   async findAll(): Promise<Expediente[]> {
-    return await this.expedienteRepository.find({ relations: ['pases', 'dependencia', 'pases.destino'] });
+    return await this.expedienteRepository.find({ relations: ['pases', 'dependencia', 'pases.dependencia'] });
   }
 
   async findOneExpediente(id: number): Promise<Expediente> {
-    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia', 'pases.destino'] }
+    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia', 'pases.dependencia'] }
     const expedienteFound = await this.expedienteRepository.findOne(query)
     if (!expedienteFound) throw new HttpException({
       status: HttpStatus.NOT_FOUND,
@@ -274,7 +272,7 @@ export class MigrationService {
     return expedienteFound;
   }
 
-  update(id: number, updateMigrationDto ) {
+  update(id: number, updateMigrationDto) {
     return `This action updates a #${id} migration`;
   }
 
