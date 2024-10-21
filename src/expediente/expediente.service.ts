@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, ILike, Repository } from 'typeorm';
 import { Pase } from 'src/pase/entities/pase.entity';
+import { serialize } from 'v8';
 
 @Injectable()
 export class ExpedienteService {
@@ -73,28 +74,54 @@ export class ExpedienteService {
       where: { idExpediente: expedienteId }, // Buscamos por el ID del expediente
       relations: ['pases'], // Incluimos la relación con los pases
     });
-  
+
     if (!expediente) {
       throw new NotFoundException('Expediente no encontrado');
     }
-  
+
     const totalPases = expediente.pases.length;
     const nuevaRuta = Math.floor(totalPases / 25) + 1;
-  
+
     // Solo actualiza la ruta si ha cambiado
     if (expediente.ruta_expediente !== nuevaRuta) {
       expediente.ruta_expediente = nuevaRuta;
       await this.expedienteRepository.save(expediente);
     }
-  } 
-
-  findAll() {
-    return `This action returns all expediente`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} expediente`;
+  findAllExpediente(): Promise<CreateExpedienteDto[]> {
+    return this.expedienteRepository.find();
   }
+
+  async findOneExpediente(id: number): Promise<Expediente> {
+    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia', 'pases.dependencia'] }
+    const expedienteFound = await this.expedienteRepository.findOne(query)
+    if (!expedienteFound) throw new HttpException({
+      status: HttpStatus.NOT_FOUND,
+      error: `No existe el expediente que esta buscando`
+    }, HttpStatus.NOT_FOUND)
+    return expedienteFound;
+  }
+
+  async findExpedienteByTitle(query: string): Promise<CreateExpedienteDto[]> {
+    const queryFound: FindManyOptions<Expediente> = {
+      where: {
+        titulo_expediente: ILike(`%${query}%`)
+      }
+    }
+
+    const expedientesFound = await this.expedienteRepository.find(queryFound)
+
+    if (expedientesFound.length === 0) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `No existen expedientes con ese título`
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    return expedientesFound;
+  }
+
 
   update(id: number, updateExpedienteDto: UpdateExpedienteDto) {
     return `This action updates a #${id} expediente`;

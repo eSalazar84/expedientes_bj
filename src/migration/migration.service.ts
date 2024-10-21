@@ -271,7 +271,7 @@ export class MigrationService {
     }, HttpStatus.NOT_FOUND)
     return expedienteFound;
   }
-
+  
   update(id: number, updateMigrationDto) {
     return `This action updates a #${id} migration`;
   }

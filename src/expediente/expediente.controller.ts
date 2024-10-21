@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, ParseIntPipe, HttpStatus, Query } from '@nestjs/common';
 import { ExpedienteService } from './expediente.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
@@ -14,13 +14,18 @@ export class ExpedienteController {
   }
 
   @Get()
-  findAll() {
-    return this.expedienteService.findAll();
+  async findAll(@Query('query') query ?: string): Promise<CreateExpedienteDto[]> {
+    if (query) {
+      return await this.expedienteService.findExpedienteByTitle(query)
+    } else {
+      return await this.expedienteService.findAllExpediente()
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.expedienteService.findOne(+id);
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number): Promise<Expediente> {
+    return await this.expedienteService.findOneExpediente(id);
   }
 
   @Patch(':id')
