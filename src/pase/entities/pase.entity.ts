@@ -25,5 +25,5 @@ export class Pase {
 
     @ManyToOne(() => Dependencia, (dependencia) => dependencia.pases)
     @JoinColumn({ name: 'dependenciaId' })
-    dependencia: Dependencia
+    destino: Dependencia
 }

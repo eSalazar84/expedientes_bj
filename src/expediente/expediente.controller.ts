@@ -14,11 +14,17 @@ export class ExpedienteController {
   }
 
   @Get()
-  async findAll(@Query('query') query ?: string): Promise<CreateExpedienteDto[]> {
-    if (query) {
-      return await this.expedienteService.findExpedienteByTitle(query)
+  async findAll(
+    @Query() filters: {
+      search_title_exp?: string,
+      search_anio_exp?: number,
+      search_dependencia?: string
+    }
+  ): Promise<CreateExpedienteDto[]> {
+    if (Object.keys(filters).length > 0) {
+      return await this.expedienteService.findExpedienteByFilters(filters);
     } else {
-      return await this.expedienteService.findAllExpediente()
+      return await this.expedienteService.findAllExpediente();
     }
   }
 

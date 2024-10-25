@@ -20,13 +20,13 @@ export class MigrationController {
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
       },
     }),
-  }))
+  }))  
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<{ status: number, message: string }> {
     if (!file) throw new HttpException({
       status: HttpStatus.BAD_REQUEST,
       error: `you must upload a file`
     }, HttpStatus.BAD_REQUEST)
-    await this.migrationService.migrateCSV(file.path);
+    await this.migrationService.migrateCSV(file);
     // Procesamos el archivo CSV
     try {
       fs.unlinkSync(file.path); // Elimina el archivo después de procesarlo
@@ -38,26 +38,5 @@ export class MigrationController {
       fs.unlinkSync(file.path); // Elimina el archivo en caso de error
       throw new BadRequestException(`Error processing file: ${error.message}`);
     }
-  }
-
-  @Get()
-  findAll(): Promise<Expediente[]> {
-    return this.migrationService.findAll();
-  }
-
-  @Get(':id')
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number): Promise<Expediente> {
-    return await this.migrationService.findOneExpediente(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMigrationDto) {
-    return this.migrationService.update(+id, updateMigrationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.migrationService.remove(+id);
   }
 }

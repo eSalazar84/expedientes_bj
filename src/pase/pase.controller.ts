@@ -13,16 +13,6 @@ export class PaseController {
     return await this.paseService.createPase(createPaseDto);
   }
 
-  @Get()
-  findAll() {
-    return this.paseService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paseService.findOne(+id);
-  }
-
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePaseDto: UpdatePaseDto) {
     return this.paseService.update(+id, updatePaseDto);

@@ -4,7 +4,7 @@ import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { FindManyOptions, FindOneOptions, ILike, Repository } from 'typeorm';
+import { FindManyOptions, FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { Pase } from 'src/pase/entities/pase.entity';
 import { serialize } from 'v8';
 
@@ -59,34 +59,11 @@ export class ExpedienteService {
       ruta_expediente: rutaInicial, // Inicializa la ruta en 1
       titulo_expediente, // Proporcionado por el usuario
       descripcion, // Proporcionado por el usuario
-      dependencia, // Asignar la dependencia relacionada
+      dependenciaId, // Asignar la dependencia relacionada,      
     });
 
     // 8. Guardar el expediente en la base de datos
     return this.expedienteRepository.save(nuevoExpediente);
-  }
-
-
-  // Método adicional para manejar el cambio de ruta en base a la cantidad de pases
-  async actualizarRutaExpediente(expedienteId: number): Promise<void> {
-    // Ahora pasamos el expedienteId como parte de las opciones en el objeto
-    const expediente = await this.expedienteRepository.findOne({
-      where: { idExpediente: expedienteId }, // Buscamos por el ID del expediente
-      relations: ['pases'], // Incluimos la relación con los pases
-    });
-
-    if (!expediente) {
-      throw new NotFoundException('Expediente no encontrado');
-    }
-
-    const totalPases = expediente.pases.length;
-    const nuevaRuta = Math.floor(totalPases / 25) + 1;
-
-    // Solo actualiza la ruta si ha cambiado
-    if (expediente.ruta_expediente !== nuevaRuta) {
-      expediente.ruta_expediente = nuevaRuta;
-      await this.expedienteRepository.save(expediente);
-    }
   }
 
   findAllExpediente(): Promise<CreateExpedienteDto[]> {
@@ -103,24 +80,42 @@ export class ExpedienteService {
     return expedienteFound;
   }
 
-  async findExpedienteByTitle(query: string): Promise<CreateExpedienteDto[]> {
-    const queryFound: FindManyOptions<Expediente> = {
-      where: {
-        titulo_expediente: ILike(`%${query}%`)
-      }
+  async findExpedienteByFilters(filters: {
+    search_title_exp?: string,
+    search_anio_exp?: number,
+    search_dependencia?: string
+  }): Promise<CreateExpedienteDto[]> {
+    const where: FindOptionsWhere<Expediente> = {};
+  
+    // Condiciones de búsqueda por título, año y dependencia
+    if (filters.search_title_exp) {
+      where.titulo_expediente = ILike(`%${filters.search_title_exp}%`);
     }
-
-    const expedientesFound = await this.expedienteRepository.find(queryFound)
-
-    if (expedientesFound.length === 0) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        error: `No existen expedientes con ese título`
-      }, HttpStatus.NOT_FOUND);
+  
+    if (filters.search_anio_exp) {
+      where.anio_expediente = filters.search_anio_exp;
     }
-
-    return expedientesFound;
+  
+    if (filters.search_dependencia) {
+      where.dependencia_creadora = {
+        nombre_dependencia: ILike(`%${filters.search_dependencia}%`)
+      };
+    }
+  
+    // Hacer la consulta con las condiciones combinadas
+    const expedientes = await this.expedienteRepository.find({
+      where: Object.keys(where).length ? where : undefined,  // Solo aplicar where si hay criterios
+      relations: ['dependencia_creadora', 'pases'] // Incluir relaciones
+    });
+  
+    // Verificar si se encontraron expedientes
+    if (expedientes.length === 0) {
+      throw new HttpException('No existen expedientes con ese criterio', HttpStatus.NOT_FOUND);
+    }
+  
+    return expedientes;
   }
+  
 
 
   update(id: number, updateExpedienteDto: UpdateExpedienteDto) {

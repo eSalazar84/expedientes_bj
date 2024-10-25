@@ -30,7 +30,7 @@ export class Expediente {
 
     @ManyToOne(() => Dependencia, (dependencia) => dependencia.expedientes)
     @JoinColumn({ name: 'dependenciaId' })
-    dependencia: Dependencia
+    dependencia_creadora: Dependencia
 
     @OneToMany(() => Pase, (pase) => pase.expediente)
     pases: Pase[]

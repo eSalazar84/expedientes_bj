@@ -23,9 +23,9 @@ export class Dependencia {
     @Column({ type: 'varchar', length: 60, nullable: true })
     email_dependencia: string | null
 
-    @OneToMany(() => Expediente, (expediente) => expediente.dependencia)
+    @OneToMany(() => Expediente, (expediente) => expediente.dependencia_creadora)
     expedientes: Expediente[]
 
-    @OneToMany(() => Pase, (pase) => pase.dependenciaId)
+    @OneToMany(() => Pase, (pase) => pase.destino)
     pases: Pase[]
 }
