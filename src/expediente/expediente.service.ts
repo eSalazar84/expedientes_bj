@@ -1,12 +1,11 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { FindManyOptions, FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
-import { Pase } from 'src/pase/entities/pase.entity';
-import { serialize } from 'v8';
+import { FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
+
 
 @Injectable()
 export class ExpedienteService {
@@ -17,24 +16,26 @@ export class ExpedienteService {
     private readonly dependenciaRepository: Repository<Dependencia>,
   ) { }
 
-  async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<Expediente> {
+  async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
 
     // 1. Buscar la dependencia por ID
     const dependencia = await this.dependenciaRepository.findOne({
       where: { idDependencia: dependenciaId },
-    });
+    });    
 
-    if (!dependencia) {
-      throw new NotFoundException('Dependencia no encontrada');
-    }
+    if (!dependencia) throw new HttpException({
+      status: HttpStatus.NOT_FOUND,
+      error: `Dependencia no encontrada`
+    }, HttpStatus.NOT_FOUND)
 
     // 2. Obtener la letra asignada a la dependencia
     const letraAsignada = dependencia.nombre_dependencia[0]; // Asignar la primera letra del nombre de la dependencia como letra_identificadora
 
-    if (!letraAsignada) {
-      throw new BadRequestException('La dependencia no tiene una letra identificadora');
-    }
+    if (!letraAsignada) throw new HttpException({
+      status: HttpStatus.NOT_FOUND,
+      error: `La dependencia no tiene una letra identificadora`
+    }, HttpStatus.NOT_FOUND)
 
     // 3. Obtener el año actual
     const anioActual = new Date().getFullYear();
@@ -59,7 +60,7 @@ export class ExpedienteService {
       ruta_expediente: rutaInicial, // Inicializa la ruta en 1
       titulo_expediente, // Proporcionado por el usuario
       descripcion, // Proporcionado por el usuario
-      dependenciaId, // Asignar la dependencia relacionada,      
+      dependencia_creadora: dependencia, // Asignar la dependencia relacionada,      
     });
 
     // 8. Guardar el expediente en la base de datos
@@ -67,11 +68,13 @@ export class ExpedienteService {
   }
 
   findAllExpediente(): Promise<CreateExpedienteDto[]> {
-    return this.expedienteRepository.find();
+    return this.expedienteRepository.find({
+      relations: ['pases', 'dependencia_creadora']
+    });
   }
 
-  async findOneExpediente(id: number): Promise<Expediente> {
-    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia', 'pases.dependencia'] }
+  async findOneExpediente(id: number): Promise<CreateExpedienteDto> {
+    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia_creadora'] }
     const expedienteFound = await this.expedienteRepository.findOne(query)
     if (!expedienteFound) throw new HttpException({
       status: HttpStatus.NOT_FOUND,
@@ -86,36 +89,36 @@ export class ExpedienteService {
     search_dependencia?: string
   }): Promise<CreateExpedienteDto[]> {
     const where: FindOptionsWhere<Expediente> = {};
-  
+
     // Condiciones de búsqueda por título, año y dependencia
     if (filters.search_title_exp) {
       where.titulo_expediente = ILike(`%${filters.search_title_exp}%`);
     }
-  
+
     if (filters.search_anio_exp) {
       where.anio_expediente = filters.search_anio_exp;
     }
-  
+
     if (filters.search_dependencia) {
       where.dependencia_creadora = {
         nombre_dependencia: ILike(`%${filters.search_dependencia}%`)
       };
     }
-  
+    
     // Hacer la consulta con las condiciones combinadas
     const expedientes = await this.expedienteRepository.find({
       where: Object.keys(where).length ? where : undefined,  // Solo aplicar where si hay criterios
       relations: ['dependencia_creadora', 'pases'] // Incluir relaciones
     });
-  
+
     // Verificar si se encontraron expedientes
     if (expedientes.length === 0) {
       throw new HttpException('No existen expedientes con ese criterio', HttpStatus.NOT_FOUND);
     }
-  
+
     return expedientes;
   }
-  
+
 
 
   update(id: number, updateExpedienteDto: UpdateExpedienteDto) {

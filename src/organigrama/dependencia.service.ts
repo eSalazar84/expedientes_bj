@@ -4,7 +4,6 @@ import { UpdateDependenciaDto } from './dto/update-dependencia.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Dependencia } from './entities/dependencia.entity';
 import { FindOneOptions, Repository } from 'typeorm';
-import { error } from 'console';
 
 @Injectable()
 export class DependenciaService {
@@ -68,7 +67,7 @@ export class DependenciaService {
     const productFound = await this.dependenciaRepository.findOne(queryFound)
     if (!productFound) throw new HttpException({
       status: HttpStatus.NOT_FOUND,
-      error: `No existe un producto con el id ${id}`
+      error: `No existe una dependencia con el id ${id}`
     }, HttpStatus.NOT_FOUND)
     
     const updateUser = Object.assign(productFound, updateDependenciaDto)

@@ -1,9 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, BadRequestException, UsePipes, ValidationPipe, HttpStatus, ParseIntPipe, HttpException } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, HttpStatus, HttpException } from '@nestjs/common';
 import { MigrationService } from './migration.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
-import { Expediente } from '../expediente/entities/expediente.entity';
 import * as fs from 'fs'
 
 
@@ -20,7 +19,7 @@ export class MigrationController {
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
       },
     }),
-  }))  
+  }))
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<{ status: number, message: string }> {
     if (!file) throw new HttpException({
       status: HttpStatus.BAD_REQUEST,
@@ -36,7 +35,10 @@ export class MigrationController {
       };
     } catch (error) {
       fs.unlinkSync(file.path); // Elimina el archivo en caso de error
-      throw new BadRequestException(`Error processing file: ${error.message}`);
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        error: `Error processing file: ${error.message}`,
+      }, HttpStatus.BAD_REQUEST);
     }
   }
 }

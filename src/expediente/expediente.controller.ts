@@ -9,7 +9,7 @@ export class ExpedienteController {
   constructor(private readonly expedienteService: ExpedienteService) { }
 
   @Post()
-  async create(@Body() createExpedienteDto: CreateExpedienteDto): Promise<Expediente> {
+  async create(@Body() createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     return await this.expedienteService.createExpediente(createExpedienteDto);
   }
 
@@ -30,7 +30,9 @@ export class ExpedienteController {
 
   @Get(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number): Promise<Expediente> {
+  async findOne(
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
+  ): Promise<CreateExpedienteDto> {
     return await this.expedienteService.findOneExpediente(id);
   }
 
