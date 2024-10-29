@@ -7,22 +7,16 @@ export class Expediente {
     @PrimaryGeneratedColumn()
     idExpediente: number
 
-    @Column()
+    @Column({ type: 'year' })
     anio_expediente: number
 
-    @Column()
-    letra_identificadora: string
-
-    @Column()
-    nro_expediente: number
-
-    @Column()
+    @Column({ type: 'int' })
     ruta_expediente: number
 
-    @Column()
+    @Column({ type: 'varchar', length: 120 })
     titulo_expediente: string
 
-    @Column()
+    @Column({ type: 'varchar', length: 250 })
     descripcion: string
 
     @Column({ type: "int" })

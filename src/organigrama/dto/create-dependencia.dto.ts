@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator"
+import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
 
 export class CreateDependenciaDto {
 
@@ -18,4 +18,12 @@ export class CreateDependenciaDto {
     @IsEmail()
     email_dependencia: string
 
+    @IsOptional()
+    @IsString()
+    @Length(1)
+    letra_identificadora: string
+
+    @IsNumber()
+    @IsOptional()
+    codigo_interno_telefono: number
 }

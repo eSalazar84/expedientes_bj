@@ -10,6 +10,12 @@ export class Dependencia {
     @Column({ type: 'varchar', length: 80 })
     nombre_dependencia: string
 
+    @Column({ type: 'varchar', length: 1 })
+    letra_identificadora: string
+
+    @Column({ type: 'int' })
+    nro_expediente: number
+
     @Column({ type: 'varchar', length: 20, nullable: true })
     telefono: string | null
 

@@ -22,45 +22,42 @@ export class ExpedienteService {
     // 1. Buscar la dependencia por ID
     const dependencia = await this.dependenciaRepository.findOne({
       where: { idDependencia: dependenciaId },
-    });    
-
-    if (!dependencia) throw new HttpException({
-      status: HttpStatus.NOT_FOUND,
-      error: `Dependencia no encontrada`
-    }, HttpStatus.NOT_FOUND)
-
-    // 2. Obtener la letra asignada a la dependencia
-    const letraAsignada = dependencia.nombre_dependencia[0]; // Asignar la primera letra del nombre de la dependencia como letra_identificadora
-
-    if (!letraAsignada) throw new HttpException({
-      status: HttpStatus.NOT_FOUND,
-      error: `La dependencia no tiene una letra identificadora`
-    }, HttpStatus.NOT_FOUND)
-
-    // 3. Obtener el año actual
-    const anioActual = new Date().getFullYear();
-
-    // 4. Buscar el expediente más reciente con la misma letra y año para determinar el próximo número
-    const ultimoExpediente = await this.expedienteRepository.findOne({
-      where: { letra_identificadora: letraAsignada, anio_expediente: anioActual },
-      order: { nro_expediente: 'DESC' },
     });
 
-    // 5. Incrementar el número del expediente
-    const nuevoNumeroExpediente = ultimoExpediente ? ultimoExpediente.nro_expediente + 1 : 1;
+    if (!dependencia) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `Dependencia no encontrada`
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    // 2. Obtener el año actual
+    const anioActual = 2025;
+
+    // 3. Consultar el número de expedientes ya generados por la dependencia en el año actual
+    const expedientesAnioActual = await this.expedienteRepository.count({
+      where: {
+        dependencia_creadora: dependencia,
+        anio_expediente: anioActual,
+      },
+    });
+
+    // 4. Incrementar el número de expediente para el año actual
+    dependencia.nro_expediente = expedientesAnioActual + 1;
+
+    // 5. Guardar la actualización en la dependencia
+    await this.dependenciaRepository.save(dependencia);
 
     // 6. Inicializar la ruta del expediente en 1
     const rutaInicial = 1;
 
     // 7. Crear el nuevo expediente
     const nuevoExpediente = this.expedienteRepository.create({
-      anio_expediente: anioActual, // Asignar el año en curso
-      letra_identificadora: letraAsignada, // Letra basada en la dependencia
-      nro_expediente: nuevoNumeroExpediente, // Número secuencial del expediente
-      ruta_expediente: rutaInicial, // Inicializa la ruta en 1
-      titulo_expediente, // Proporcionado por el usuario
-      descripcion, // Proporcionado por el usuario
-      dependencia_creadora: dependencia, // Asignar la dependencia relacionada,      
+      anio_expediente: anioActual,      // Asignar el año en curso
+      ruta_expediente: rutaInicial,     // Inicializa la ruta en 1
+      titulo_expediente,                // Proporcionado por el usuario
+      descripcion,                      // Proporcionado por el usuario
+      dependencia_creadora: dependencia // Asignar la dependencia relacionada
     });
 
     // 8. Guardar el expediente en la base de datos
@@ -104,7 +101,7 @@ export class ExpedienteService {
         nombre_dependencia: ILike(`%${filters.search_dependencia}%`)
       };
     }
-    
+
     // Hacer la consulta con las condiciones combinadas
     const expedientes = await this.expedienteRepository.find({
       where: Object.keys(where).length ? where : undefined,  // Solo aplicar where si hay criterios
