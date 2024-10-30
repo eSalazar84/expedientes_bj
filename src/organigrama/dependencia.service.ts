@@ -4,12 +4,13 @@ import { UpdateDependenciaDto } from './dto/update-dependencia.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Dependencia } from './entities/dependencia.entity';
 import { FindOneOptions, Repository } from 'typeorm';
+import { Expediente } from 'src/expediente/entities/expediente.entity';
 
 @Injectable()
 export class DependenciaService {
   constructor(
     @InjectRepository(Dependencia)
-    private readonly dependenciaRepository: Repository<CreateDependenciaDto>
+    private readonly dependenciaRepository: Repository<Dependencia>
   ) { }
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
@@ -39,6 +40,19 @@ export class DependenciaService {
     return await this.dependenciaRepository.save(newDependencia);
   }
 
+  async findOneDependencia(id: number): Promise<Dependencia> {
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+    return dependenciaFound;
+  }
+
   async findAllDependencia(): Promise<CreateDependenciaDto[]> {
     return await this.dependenciaRepository.find();
   }
@@ -63,14 +77,21 @@ export class DependenciaService {
   }
 
   async updateDependencia(id: number, updateDependenciaDto: UpdateDependenciaDto): Promise<UpdateDependenciaDto> {
-    const queryFound: FindOneOptions = { where: { id: id } }
-    const productFound = await this.dependenciaRepository.findOne(queryFound)
-    if (!productFound) throw new HttpException({
-      status: HttpStatus.NOT_FOUND,
-      error: `No existe una dependencia con el id ${id}`
-    }, HttpStatus.NOT_FOUND)
+    console.log(updateDependenciaDto);
     
-    const updateUser = Object.assign(productFound, updateDependenciaDto)
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+
+    const updateUser = Object.assign(id, updateDependenciaDto)
+    console.log(`llego?: ${updateUser}`);
+    
     return this.dependenciaRepository.save(updateUser)
   }
 

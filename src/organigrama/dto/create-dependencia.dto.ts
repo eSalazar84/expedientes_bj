@@ -1,6 +1,7 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
 
 export class CreateDependenciaDto {
+    idDependencia: number
 
     @IsString()
     @IsNotEmpty()
