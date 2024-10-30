@@ -19,22 +19,16 @@ export class ExpedienteService {
   async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
 
-    // 1. Buscar la dependencia por ID
+    // Buscar la dependencia por ID
     const dependencia = await this.dependenciaRepository.findOne({
-      where: { idDependencia: dependenciaId },
+      where: { idDependencia: dependenciaId }
     });
-
     if (!dependencia) {
-      throw new HttpException({
-        status: HttpStatus.NOT_FOUND,
-        error: `Dependencia no encontrada`
-      }, HttpStatus.NOT_FOUND);
+      throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
     }
 
-    // 2. Obtener el año actual
-    const anioActual = 2025;
-
-    // 3. Consultar el número de expedientes ya generados por la dependencia en el año actual
+    // Obtener el año actual y contar los expedientes existentes para la dependencia en este año
+    const anioActual = new Date().getFullYear();
     const expedientesAnioActual = await this.expedienteRepository.count({
       where: {
         dependencia_creadora: dependencia,
@@ -42,25 +36,20 @@ export class ExpedienteService {
       },
     });
 
-    // 4. Incrementar el número de expediente para el año actual
-    dependencia.nro_expediente = expedientesAnioActual + 1;
+    // Asignar el próximo número de expediente para la dependencia en este año
+    const nuevoNroExpediente = expedientesAnioActual + 1;
 
-    // 5. Guardar la actualización en la dependencia
-    await this.dependenciaRepository.save(dependencia);
-
-    // 6. Inicializar la ruta del expediente en 1
-    const rutaInicial = 1;
-
-    // 7. Crear el nuevo expediente
+    // Crear el nuevo expediente con el número de expediente calculado
     const nuevoExpediente = this.expedienteRepository.create({
-      anio_expediente: anioActual,      // Asignar el año en curso
-      ruta_expediente: rutaInicial,     // Inicializa la ruta en 1
-      titulo_expediente,                // Proporcionado por el usuario
-      descripcion,                      // Proporcionado por el usuario
-      dependencia_creadora: dependencia // Asignar la dependencia relacionada
+      anio_expediente: anioActual,
+      ruta_expediente: 1,
+      nro_expediente: nuevoNroExpediente,  // asignar el número aquí
+      titulo_expediente,
+      descripcion,
+      dependencia_creadora: dependencia
     });
 
-    // 8. Guardar el expediente en la base de datos
+    // Guardar el expediente en la base de datos
     return this.expedienteRepository.save(nuevoExpediente);
   }
 

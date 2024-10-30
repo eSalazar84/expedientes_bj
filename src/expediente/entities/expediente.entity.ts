@@ -11,6 +11,9 @@ export class Expediente {
     anio_expediente: number
 
     @Column({ type: 'int' })
+    nro_expediente: number
+
+    @Column({ type: 'int' })
     ruta_expediente: number
 
     @Column({ type: 'varchar', length: 120 })

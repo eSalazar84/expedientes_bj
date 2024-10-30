@@ -90,7 +90,7 @@ export class DependenciaController {
     @Body() updateDependenciaDto: UpdateDependenciaDto
   ): Promise<UpdateDependenciaDto> {
     try {
-      console.log(`Llego?`);
+      console.log(`Llego al controlador?`);
       
       return await this.dependenciaService.updateDependencia(id, updateDependenciaDto);
     } catch (error) {

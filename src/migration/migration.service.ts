@@ -156,7 +156,6 @@ export class MigrationService {
           guardarDependencia = this.dependenciaRepository.create({
             nombre_dependencia: codigoDependencia,
             letra_identificadora: row.LETRA,
-            nro_expediente: parseInt(row.NRO, 10),
           });
           guardarDependencia = await this.dependenciaRepository.save(guardarDependencia);
         }
@@ -167,6 +166,7 @@ export class MigrationService {
       // Crear el expediente
       const expediente = this.expedienteRepository.create({
         anio_expediente: parseInt(row.ANIO, 10),
+        nro_expediente: parseInt(row.NRO, 10),
         ruta_expediente: row.RUTA,
         titulo_expediente: row.NOM,
         descripcion: `${row.MOTIVO1} ${row.MOTIVO2 || ''}`.trim(),
