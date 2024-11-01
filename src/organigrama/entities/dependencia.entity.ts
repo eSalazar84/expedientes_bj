@@ -11,7 +11,7 @@ export class Dependencia {
     nombre_dependencia: string
 
     @Column({ type: 'varchar', length: 1 })
-    letra_identificadora: string
+    letra_identificadora: string | null
 
     @Column({ type: 'varchar', length: 20, nullable: true })
     telefono: string | null
