@@ -19,36 +19,53 @@ export class PaseService {
   ) { }
 
   async createPase(createPaseDto: CreatePaseDto): Promise<Pase> {
-    const { destinoId, expedienteId } = createPaseDto
+    const { destinoId, expedienteId } = createPaseDto;
 
+    // Verificar si existe la dependencia destino
     const destinoFound = await this.dependenciaRepository.findOne({
       where: { idDependencia: destinoId }
-    })
+    });
 
     if (!destinoFound) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
-        error: `No existe la dependencia que estas buscando`,
+        error: `No existe la dependencia que estás buscando`,
       }, HttpStatus.NOT_FOUND);
     }
 
-    const expedienteFound = await this.expedienteRepository.findOne({
-      where: { idExpediente: expedienteId }
-    })
+    // Verificar si existe el expediente
+    const expedienteFound: Expediente = await this.expedienteRepository.findOne({
+      where: { idExpediente: expedienteId },
+      relations: ['pases'] // Asegura que traemos los pases relacionados
+    });
 
     if (!expedienteFound) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
-        error: `No existe el expediente que estas buscando`,
+        error: `No existe el expediente que estás buscando`,
       }, HttpStatus.NOT_FOUND);
     }
-    const newPase = this.paseRepository.create({
-      expedienteId: expedienteId,
-      destinoId: destinoId
-    })
 
-    return await this.paseRepository.save(newPase)
+    // Contar el número de pases asociados a este expediente
+    const paseCount = await this.paseRepository.count({
+      where: { expediente: { idExpediente: expedienteId } }
+    });
+
+    // Si el conteo de pases es múltiplo de 25, incrementamos ruta_expediente
+    if ((paseCount + 1) % 25 === 0) {
+      expedienteFound.ruta_expediente += 1;
+      await this.expedienteRepository.save(expedienteFound); // Guardar el cambio en ruta_expediente
+    }
+
+    // Crear y guardar el nuevo pase
+    const newPase = this.paseRepository.create({
+      expediente: expedienteFound, // Relación con el expediente existente
+      destinoId: destinoId
+    });
+
+    return await this.paseRepository.save(newPase);
   }
+
 
   async findAllPase(): Promise<CreatePaseDto[]> {
     return this.paseRepository.find()
