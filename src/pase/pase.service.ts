@@ -19,10 +19,10 @@ export class PaseService {
   ) { }
 
   async createPase(createPaseDto: CreatePaseDto): Promise<Pase> {
-    const { dependenciaId, expedienteId } = createPaseDto
+    const { destinoId, expedienteId } = createPaseDto
 
     const destinoFound = await this.dependenciaRepository.findOne({
-      where: { idDependencia: dependenciaId }
+      where: { idDependencia: destinoId }
     })
 
     if (!destinoFound) {
@@ -43,12 +43,15 @@ export class PaseService {
       }, HttpStatus.NOT_FOUND);
     }
     const newPase = this.paseRepository.create({
-      expedienteId: createPaseDto.expedienteId,
-      fecha_pase: new Date(),
-      dependenciaId: createPaseDto.dependenciaId
+      expedienteId: expedienteId,
+      destinoId: destinoId
     })
 
     return await this.paseRepository.save(newPase)
+  }
+
+  async findAllPase(): Promise<CreatePaseDto[]> {
+    return this.paseRepository.find()
   }
 
   update(id: number, updatePaseDto: UpdatePaseDto) {

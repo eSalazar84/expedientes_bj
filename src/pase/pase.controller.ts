@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, Get } from '@nestjs/common';
 import { PaseService } from './pase.service';
 import { CreatePaseDto } from './dto/create-pase.dto';
 import { UpdatePaseDto } from './dto/update-pase.dto';
@@ -11,6 +11,11 @@ export class PaseController {
   @Post()
   async create(@Body() createPaseDto: CreatePaseDto):Promise<Pase> {
     return await this.paseService.createPase(createPaseDto);
+  }
+
+  @Get()
+  async findAllPase(): Promise<CreatePaseDto[]>{
+    return await this.paseService.findAllPase()
   }
 
   @Patch(':id')

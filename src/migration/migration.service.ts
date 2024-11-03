@@ -196,6 +196,7 @@ export class MigrationService {
             if (!destinoDependencia) {
               destinoDependencia = this.dependenciaRepository.create({
                 nombre_dependencia: paseDependenciaCodigo,
+                letra_identificadora: row.paseCol || ''
               });
               destinoDependencia = await this.dependenciaRepository.save(destinoDependencia);
             }

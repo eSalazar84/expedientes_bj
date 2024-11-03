@@ -17,13 +17,13 @@ export class Pase {
     expedienteId: number
 
     @Column({ type: "int" })
-    dependenciaId: number
+    destinoId: number
 
     @ManyToOne(() => Expediente, (expediente) => expediente.pases)
     @JoinColumn({ name: 'expedienteId' })
     expediente: Expediente
 
     @ManyToOne(() => Dependencia, (dependencia) => dependencia.pases)
-    @JoinColumn({ name: 'dependenciaId' })
+    @JoinColumn({ name: 'destinoId' })
     destino: Dependencia
 }

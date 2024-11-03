@@ -90,8 +90,6 @@ export class DependenciaController {
     @Body() updateDependenciaDto: UpdateDependenciaDto
   ): Promise<UpdateDependenciaDto> {
     try {
-      console.log(`Llego al controlador?`);
-      
       return await this.dependenciaService.updateDependencia(id, updateDependenciaDto);
     } catch (error) {
       // Si el error ya es una HttpException (manejado previamente), lo volvemos a lanzar

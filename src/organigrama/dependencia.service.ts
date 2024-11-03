@@ -77,8 +77,6 @@ export class DependenciaService {
   }
 
   async updateDependencia(id: number, updateDependenciaDto: UpdateDependenciaDto): Promise<UpdateDependenciaDto> {
-    console.log(updateDependenciaDto);
-    
     const dependenciaFound = await this.dependenciaRepository.findOne({
       where: { idDependencia: id }
     })
@@ -90,7 +88,6 @@ export class DependenciaService {
     }
 
     const updateUser = Object.assign(dependenciaFound, updateDependenciaDto)
-    console.log(`llego?: ${updateUser}`);
     
     return this.dependenciaRepository.save(updateUser)
   }
