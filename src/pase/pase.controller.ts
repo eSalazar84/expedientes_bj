@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Param, Delete, Get } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, Get, Query } from '@nestjs/common';
 import { PaseService } from './pase.service';
 import { CreatePaseDto } from './dto/create-pase.dto';
 import { UpdatePaseDto } from './dto/update-pase.dto';
@@ -6,16 +6,20 @@ import { Pase } from './entities/pase.entity';
 
 @Controller('pases')
 export class PaseController {
-  constructor(private readonly paseService: PaseService) {}
+  constructor(private readonly paseService: PaseService) { }
 
   @Post()
-  async create(@Body() createPaseDto: CreatePaseDto):Promise<Pase> {
+  async create(@Body() createPaseDto: CreatePaseDto): Promise<Pase> {
     return await this.paseService.createPase(createPaseDto);
   }
 
   @Get()
-  async findAllPase(): Promise<CreatePaseDto[]>{
-    return await this.paseService.findAllPase()
+  async findAllPase(@Query('idExpediente') idExpediente: number): Promise<CreatePaseDto[]> {
+    if(!idExpediente){
+      return await this.paseService.findAllPase()
+    } else {
+      return await this.paseService.findPasesByIdExpediente(idExpediente)
+    }
   }
 
   @Patch(':id')

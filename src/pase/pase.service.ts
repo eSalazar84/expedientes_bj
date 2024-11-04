@@ -71,6 +71,20 @@ export class PaseService {
     return this.paseRepository.find()
   }
 
+  async findPasesByIdExpediente(idExpediente: number): Promise<Pase[]>{
+    const expedienteFound = await this.paseRepository.findBy({
+      expedienteId: idExpediente
+    })
+
+    if (!expedienteFound) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `No existe el expediente que estás buscando`,
+      }, HttpStatus.NOT_FOUND);
+    }
+    return expedienteFound
+  }
+
   update(id: number, updatePaseDto: UpdatePaseDto) {
     return `This action updates a #${id} pase`;
   }
