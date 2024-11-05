@@ -170,6 +170,7 @@ export class MigrationService {
         ruta_expediente: row.RUTA,
         titulo_expediente: row.NOM,
         descripcion: `${row.MOTIVO1} ${row.MOTIVO2 || ''}`.trim(),
+        fecha_creacion: new Date(`${row.F1} ${row.H1}`),
         dependencia_creadora: guardarDependencia,
       });
 

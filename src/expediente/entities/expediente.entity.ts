@@ -22,6 +22,9 @@ export class Expediente {
     @Column({ type: 'varchar', length: 250 })
     descripcion: string
 
+    @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    fecha_creacion: Date
+
     @Column({ type: "int" })
     dependenciaId: number
 

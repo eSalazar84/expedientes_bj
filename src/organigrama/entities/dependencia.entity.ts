@@ -13,6 +13,9 @@ export class Dependencia {
     @Column({ type: 'varchar', length: 1 })
     letra_identificadora: string | null
 
+    @Column({ type: 'boolean', default: false })
+    letra_es_variable: boolean
+
     @Column({ type: 'varchar', length: 20, nullable: true })
     telefono: string | null
 
