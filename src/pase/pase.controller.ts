@@ -24,11 +24,6 @@ export class PaseController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePaseDto: UpdatePaseDto) {
-    return this.paseService.update(+id, updatePaseDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paseService.remove(+id);
+    return this.paseService.updatePase(+id, updatePaseDto);
   }
 }

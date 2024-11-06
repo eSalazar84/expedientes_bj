@@ -7,10 +7,10 @@ export class Dependencia {
     @PrimaryGeneratedColumn()
     idDependencia: number
 
-    @Column({ type: 'varchar', length: 80 })
+    @Column({ type: 'varchar', length: 80, default: 'Dependencia sin nombre' })
     nombre_dependencia: string
 
-    @Column({ type: 'varchar', length: 1 })
+    @Column({ type: 'varchar', length: 1, default: 'z' })
     letra_identificadora: string | null
 
     @Column({ type: 'boolean', default: false })

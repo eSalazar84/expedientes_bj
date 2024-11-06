@@ -87,9 +87,9 @@ export class DependenciaService {
       }, HttpStatus.CONFLICT);
     }
 
-    const updateUser = Object.assign(dependenciaFound, updateDependenciaDto)
+    const updateDependencia = Object.assign(dependenciaFound, updateDependenciaDto)
     
-    return this.dependenciaRepository.save(updateUser)
+    return this.dependenciaRepository.save(updateDependencia)
   }
 
   removeDependencia(id: number) {

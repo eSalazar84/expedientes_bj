@@ -96,7 +96,6 @@ export class DependenciaController {
       if (error instanceof HttpException) {
         throw error;
       }
-
       // Si el error no es controlado, lanzamos un 500 Internal Server Error
       throw new HttpException({
         status: HttpStatus.INTERNAL_SERVER_ERROR,

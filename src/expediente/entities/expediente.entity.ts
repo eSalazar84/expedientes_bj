@@ -32,6 +32,6 @@ export class Expediente {
     @JoinColumn({ name: 'dependenciaId' })
     dependencia_creadora: Dependencia
 
-    @OneToMany(() => Pase, (pase) => pase.expediente)
+    @OneToMany(() => Pase, (pase) => pase.expediente, { cascade: ['remove'] })
     pases: Pase[]
 }

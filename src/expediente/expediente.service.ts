@@ -105,13 +105,40 @@ export class ExpedienteService {
     return expedientes;
   }
 
+  async updateExpediente(id: number, updateExpedienteDto: UpdateExpedienteDto): Promise<CreateExpedienteDto> {
+    const expedienteFound = await this.expedienteRepository.findOne({
+      where: { idExpediente: id }
+    })
+    if (!expedienteFound) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `no existe un expediente con ese Id`,
+      }, HttpStatus.NOT_FOUND);
+    }
 
+    const updateExpediente = Object.assign(expedienteFound, updateExpedienteDto)
 
-  update(id: number, updateExpedienteDto: UpdateExpedienteDto) {
-    return `This action updates a #${id} expediente`;
+    return this.expedienteRepository.save(updateExpediente)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} expediente`;
+  async removeExpediente(id: number): Promise<void> {
+    const expediente = await this.expedienteRepository.findOne({
+      where: { idExpediente: id },
+      relations: ['pases'], // Carga los pases relacionados
+    });
+
+    if (!expediente) throw new HttpException({
+      status: HttpStatus.NOT_FOUND,
+      error: `No existe un producto con el id ${id}`
+    }, HttpStatus.NOT_FOUND)
+
+    // Borra los pases manualmente antes de eliminar el expediente
+    await this.expedienteRepository.manager.transaction(async (transactionalEntityManager) => {
+      for (const pase of expediente.pases) {
+        await transactionalEntityManager.remove(pase);
+      }
+      // Luego elimina el expediente
+      await transactionalEntityManager.remove(expediente);
+    });
   }
 }

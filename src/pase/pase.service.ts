@@ -71,7 +71,7 @@ export class PaseService {
     return this.paseRepository.find()
   }
 
-  async findPasesByIdExpediente(idExpediente: number): Promise<Pase[]>{
+  async findPasesByIdExpediente(idExpediente: number): Promise<Pase[]> {
     const expedienteFound = await this.paseRepository.findBy({
       expedienteId: idExpediente
     })
@@ -85,11 +85,20 @@ export class PaseService {
     return expedienteFound
   }
 
-  update(id: number, updatePaseDto: UpdatePaseDto) {
-    return `This action updates a #${id} pase`;
-  }
+  //REVISAR
+  async updatePase(id: number, updatePaseDto: UpdatePaseDto):Promise<CreatePaseDto> {
+    const paseFound = await this.paseRepository.findOne({
+      where: { idPase: id }
+    })
+    if (!paseFound) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `no existe un expediente con ese Id`,
+      }, HttpStatus.NOT_FOUND);
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} pase`;
+    const updateExpediente = Object.assign(paseFound, updatePaseDto)
+
+    return this.paseRepository.save(updateExpediente)
   }
 }
