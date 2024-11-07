@@ -85,20 +85,19 @@ export class PaseService {
     return expedienteFound
   }
 
-  //REVISAR
-  async updatePase(id: number, updatePaseDto: UpdatePaseDto):Promise<CreatePaseDto> {
+  async updatePase(id: number, updatePaseDto: UpdatePaseDto): Promise<CreatePaseDto> {
     const paseFound = await this.paseRepository.findOne({
       where: { idPase: id }
-    })
+    });
     if (!paseFound) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
-        error: `no existe un expediente con ese Id`,
+        error: `no existe un pase con ese Id`,
       }, HttpStatus.NOT_FOUND);
     }
 
-    const updateExpediente = Object.assign(paseFound, updatePaseDto)
-
-    return this.paseRepository.save(updateExpediente)
+    const updateExpediente = Object.assign(paseFound, updatePaseDto);
+    return this.paseRepository.save(updateExpediente);
   }
+
 }
