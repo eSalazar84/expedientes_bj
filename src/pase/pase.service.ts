@@ -72,17 +72,22 @@ export class PaseService {
   }
 
   async findPasesByIdExpediente(idExpediente: number): Promise<Pase[]> {
-    const expedienteFound = await this.paseRepository.findBy({
-      expedienteId: idExpediente
-    })
+    const expedienteFound = await this.paseRepository.find({
+      where: {
+        expedienteId: idExpediente
+      },
+      order: {
+        fecha_pase: 'DESC'  // Ordenar por fecha_pase de forma descendente
+      }
+    });
 
-    if (!expedienteFound) {
+    if (!expedienteFound.length) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
         error: `No existe el expediente que estás buscando`,
       }, HttpStatus.NOT_FOUND);
     }
-    return expedienteFound
+    return expedienteFound;
   }
 
   async updatePase(id: number, updatePaseDto: UpdatePaseDto): Promise<CreatePaseDto> {

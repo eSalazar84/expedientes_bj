@@ -33,6 +33,7 @@ export class DependenciaService {
     // Crear una nueva dependencia con el nombre normalizado
     const newDependencia = this.dependenciaRepository.create({
       ...createDependenciaDto,
+      letra_identificadora: createDependenciaDto.letra_identificadora.trim().toUpperCase(),
       nombre_dependencia: dependenciaNormalizada,  // Guardar el nombre normalizado
     });
 
