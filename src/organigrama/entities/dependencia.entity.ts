@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Expediente } from "../../expediente/entities/expediente.entity";
 import { Pase } from "../../pase/entities/pase.entity";
-
+import { Rol } from "../../auth/enums/rol.enum";
 @Entity()
 export class Dependencia {
     @PrimaryGeneratedColumn()
@@ -33,4 +33,10 @@ export class Dependencia {
 
     @OneToMany(() => Pase, (pase) => pase.destino)
     pases: Pase[]
+
+    @Column({ type: 'enum', enum: Rol, default: 'USER' })
+    rol: Rol;
+
+    @Column({ type: 'varchar', length: 60, nullable: true })
+    password: string;
 }

@@ -6,6 +6,7 @@ import { DependenciaModule } from './organigrama/dependencia.module';
 import { ExpedienteModule } from './expediente/expediente.module';
 import { PaseModule } from './pase/pase.module';
 import { DB_TYPE, HOST, PORT, USER_DB_NAME, USER_DB_PASSWORD, DATABASE_NAME } from 'config'
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { DB_TYPE, HOST, PORT, USER_DB_NAME, USER_DB_PASSWORD, DATABASE_NAME } fr
     MigrationModule,
     DependenciaModule,
     ExpedienteModule,
-    PaseModule
+    PaseModule,
+    AuthModule
   ],
   controllers: [],
   providers: [],
