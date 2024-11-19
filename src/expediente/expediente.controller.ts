@@ -1,15 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, ParseIntPipe, HttpStatus, Query, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, ParseIntPipe, HttpStatus, Query, HttpException, UseGuards } from '@nestjs/common';
 import { ExpedienteService } from './expediente.service';
 import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { AuthGuard } from '../auth/guard/auth.guard';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
+import { Rol } from 'src/auth/enums/rol.enum';
 
 @Controller('expediente')
 export class ExpedienteController {
   constructor(private readonly expedienteService: ExpedienteService) { }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN)
   @Post()
   async createExpediente(@Body() createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     try {
@@ -25,6 +28,8 @@ export class ExpedienteController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN, Rol.USER)
   @Get()
   async findAll(
     @Query() filters: {
@@ -50,6 +55,8 @@ export class ExpedienteController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN, Rol.USER)
   @Get(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async findOne(
@@ -68,6 +75,8 @@ export class ExpedienteController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN, Rol.USER)
   @Patch(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async updateExpediente(
@@ -87,6 +96,8 @@ export class ExpedienteController {
     }
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.ADMIN)
   @Delete(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async removeExpediente(

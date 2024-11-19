@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
+import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
+import { Rol } from "src/auth/enums/rol.enum"
 
 export class CreateDependenciaDto {
     idDependencia: number
@@ -27,4 +28,12 @@ export class CreateDependenciaDto {
     @IsNumber()
     @IsOptional()
     codigo_interno_telefono: number
+
+    @IsEnum(Rol)
+    @IsOptional()
+    rol: Rol
+
+    @IsString()
+    @IsOptional()
+    password: string
 }

@@ -18,6 +18,8 @@ export class AuthService {
             where: { email_dependencia: email }
         });
 
+        console.log(dependencia);
+
         if (!dependencia || !dependencia.email_dependencia) {
             throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
         }

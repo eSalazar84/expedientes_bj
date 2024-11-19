@@ -132,6 +132,21 @@ export class MigrationService {
     });
   } */
 
+  private parsearFechaHora = (fecha: string, hora: string): Date => {
+    try {
+      if (!fecha || !hora) return new Date();
+
+      // Convertir DD/MM/YYYY a YYYY-MM-DD
+      const [dia, mes, anio] = fecha.split('/');
+      const fechaFormateada = `${anio}-${mes}-${dia} ${hora}`;
+
+      const fechaHora = new Date(fechaFormateada);
+      return isNaN(fechaHora.getTime()) ? new Date() : fechaHora;
+    } catch {
+      return new Date();
+    }
+  };
+
   async migrateCSV(file: Express.Multer.File) {
     const expedientes = [];
     const pases = [];
@@ -170,7 +185,7 @@ export class MigrationService {
         ruta_expediente: row.RUTA,
         titulo_expediente: row.NOM,
         descripcion: `${row.MOTIVO1} ${row.MOTIVO2 || ''}`.trim(),
-        fecha_creacion: new Date(`${row.F1} ${row.H1}`),
+        fecha_creacion: this.parsearFechaHora(row.F1, row.H1),
         dependencia_creadora: guardarDependencia,
       });
 
@@ -208,7 +223,7 @@ export class MigrationService {
           // Crear el pase con la dependencia de destino encontrada o creada
           const pase = this.paseRepository.create({
             expediente: savedExpediente, // Usar el expediente guardado
-            fecha_hora_migracion: new Date(`${fechaCol} ${horaCol}`),
+            fecha_hora_migracion: this.parsearFechaHora(fechaCol, horaCol),
             destino: destinoDependencia,
           });
           pases.push(pase);

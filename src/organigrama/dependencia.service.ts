@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Dependencia } from './entities/dependencia.entity';
 import { FindOneOptions, Repository } from 'typeorm';
 import { Expediente } from 'src/expediente/entities/expediente.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DependenciaService {
@@ -12,6 +13,12 @@ export class DependenciaService {
     @InjectRepository(Dependencia)
     private readonly dependenciaRepository: Repository<Dependencia>
   ) { }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    return hashedPassword;
+  }
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
     // Normalizar el valor ingresado por el usuario
@@ -88,8 +95,12 @@ export class DependenciaService {
       }, HttpStatus.CONFLICT);
     }
 
-    const updateDependencia = Object.assign(dependenciaFound, updateDependenciaDto)
+    if (updateDependenciaDto.password) {
+      updateDependenciaDto.password = await this.hashPassword(updateDependenciaDto.password);
+    }
     
+    const updateDependencia = Object.assign(dependenciaFound, updateDependenciaDto)
+
     return this.dependenciaRepository.save(updateDependencia)
   }
 
