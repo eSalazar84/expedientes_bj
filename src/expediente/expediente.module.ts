@@ -5,10 +5,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Pase } from 'src/pase/entities/pase.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
+import { AuthModule } from 'src/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Expediente, Pase, Dependencia])],
+  imports: [
+    ConfigModule,
+    TypeOrmModule.forFeature([Expediente, Pase, Dependencia]),
+    AuthModule,
+  ],
   controllers: [ExpedienteController],
   providers: [ExpedienteService],
 })
+
 export class ExpedienteModule {}

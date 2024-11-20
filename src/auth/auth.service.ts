@@ -4,11 +4,13 @@ import { Dependencia } from '../organigrama/entities/dependencia.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
+        private configService: ConfigService,
         @InjectRepository(Dependencia)
         private dependenciaRepository: Repository<Dependencia>
     ) { }
@@ -17,8 +19,6 @@ export class AuthService {
         const dependencia = await this.dependenciaRepository.findOne({
             where: { email_dependencia: email }
         });
-
-        console.log(dependencia);
 
         if (!dependencia || !dependencia.email_dependencia) {
             throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
@@ -31,14 +31,18 @@ export class AuthService {
         }
 
         const payload = {
-            email: dependencia.email_dependencia,
             sub: dependencia.idDependencia,
-            nombre: dependencia.nombre_dependencia,
-            rol: dependencia.rol
+            email: dependencia.email_dependencia,
+            rol: dependencia.rol,
+            nombre: dependencia.nombre_dependencia
         };
 
+        const token = await this.jwtService.signAsync(payload, {
+            secret: this.configService.get<string>('JWT_SECRET')
+        });
+
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token: token,
             dependencia: {
                 id: dependencia.idDependencia,
                 nombre: dependencia.nombre_dependencia,

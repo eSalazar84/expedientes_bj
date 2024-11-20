@@ -8,12 +8,12 @@ import { Roles } from 'src/auth/guard/roles.decorator';
 import { Rol } from 'src/auth/enums/rol.enum';
 
 @Controller('expediente')
+@UseGuards(AuthGuard, RolesGuard)
 export class ExpedienteController {
   constructor(private readonly expedienteService: ExpedienteService) { }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Rol.ADMIN)
   @Post()
+  @Roles(Rol.ADMIN)
   async createExpediente(@Body() createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     try {
       return await this.expedienteService.createExpediente(createExpedienteDto);
@@ -28,7 +28,6 @@ export class ExpedienteController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Rol.ADMIN, Rol.USER)
   @Get()
   async findAll(
@@ -55,7 +54,6 @@ export class ExpedienteController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Rol.ADMIN, Rol.USER)
   @Get(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -75,7 +73,6 @@ export class ExpedienteController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Rol.ADMIN, Rol.USER)
   @Patch(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -96,7 +93,6 @@ export class ExpedienteController {
     }
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Rol.ADMIN)
   @Delete(':id')
   @UsePipes(new ValidationPipe({ transform: true }))

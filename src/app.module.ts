@@ -7,8 +7,7 @@ import { ExpedienteModule } from './expediente/expediente.module';
 import { PaseModule } from './pase/pase.module';
 import { DB_TYPE, HOST, PORT, USER_DB_NAME, USER_DB_PASSWORD, DATABASE_NAME } from 'config'
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -29,15 +28,7 @@ import { JwtModule } from '@nestjs/jwt';
     DependenciaModule,
     ExpedienteModule,
     PaseModule,
-    AuthModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1h' }, // o el tiempo que prefieras
-      }),
-      inject: [ConfigService],
-    }),
+    AuthModule
   ],
   controllers: [],
   providers: [],
