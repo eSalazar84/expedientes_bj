@@ -104,7 +104,16 @@ export class DependenciaService {
     return this.dependenciaRepository.save(updateDependencia)
   }
 
-  removeDependencia(id: number) {
-    return `This action removes a #${id} Dependencia`;
+  async removeDependencia(id: number) {
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+    return this.dependenciaRepository.delete(id)
   }
 }

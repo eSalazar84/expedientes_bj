@@ -1,13 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Query, UsePipes, ValidationPipe, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Query, UsePipes, ValidationPipe, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { DependenciaService } from './dependencia.service';
 import { CreateDependenciaDto } from './dto/create-dependencia.dto';
 import { UpdateDependenciaDto } from './dto/update-dependencia.dto';
+import { Roles } from 'src/auth/guard/roles.decorator';
+import { Rol } from 'src/auth/enums/rol.enum';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
 
 @Controller('dependencia')
+//@UseGuards(AuthGuard, RolesGuard)
 export class DependenciaController {
   constructor(private readonly dependenciaService: DependenciaService) { }
 
   @Post()
+  //@Roles(Rol.SUPER_ADMIN)
   async createDependencia(@Body() createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
     try {
       return await this.dependenciaService.createDependencia(createDependenciaDto);
@@ -25,6 +31,7 @@ export class DependenciaController {
   }
 
   @Get()
+  //@Roles(Rol.ADMIN, Rol.SUPER_ADMIN, Rol.USER)
   async findAllDependencia(@Query('dependencia') dependencia?: string): Promise<CreateDependenciaDto[] | CreateDependenciaDto> {
     try {
       if (dependencia) {
@@ -47,6 +54,7 @@ export class DependenciaController {
   }
 
   @Get(':id')
+  //@Roles(Rol.ADMIN, Rol.SUPER_ADMIN, Rol.USER)
   async findOneDependencia(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number): Promise<CreateDependenciaDto> {
     try {
       return await this.dependenciaService.findOneDependencia(id);
@@ -66,6 +74,7 @@ export class DependenciaController {
 
 
   @Get(':dependencia')
+  //@Roles(Rol.ADMIN, Rol.SUPER_ADMIN, Rol.USER)
   async findOneByDependencia(@Param('dependencia') dependencia: string): Promise<CreateDependenciaDto> {
     try {
       return await this.dependenciaService.findOneByDependencia(dependencia);
@@ -84,6 +93,7 @@ export class DependenciaController {
   }
 
   @Patch(':id')
+  //@Roles(Rol.SUPER_ADMIN, Rol.ADMIN)
   @UsePipes(new ValidationPipe({ transform: true }))
   async updateDependencia(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
@@ -105,7 +115,8 @@ export class DependenciaController {
   }
 
   @Delete(':id')
-  removeDependencia(@Param('id') id: string) {
+  //@Roles(Rol.SUPER_ADMIN)
+  asyncremoveDependencia(@Param('id') id: string) {
     return this.dependenciaService.removeDependencia(+id);
   }
 }

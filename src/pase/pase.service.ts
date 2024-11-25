@@ -77,7 +77,7 @@ export class PaseService {
         expedienteId: idExpediente
       },
       order: {
-        fecha_pase: 'DESC'  // Ordenar por fecha_pase de forma descendente
+        fecha_pase: 'DESC' 
       }
     });
 

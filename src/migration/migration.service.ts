@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Expediente } from '../expediente/entities/expediente.entity';
 import { Pase } from '../pase/entities/pase.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -132,7 +132,7 @@ export class MigrationService {
     });
   } */
 
-  private parsearFechaHora = (fecha: string, hora: string): Date => {
+  /* private parsearFechaHora = (fecha: string, hora: string): Date => {
     try {
       if (!fecha || !hora) return new Date();
 
@@ -235,5 +235,144 @@ export class MigrationService {
     await this.paseRepository.save(pases);
 
     return { expedientes: expedientes.length, pases: pases.length };
+  } */
+
+  async migrateCSV(file: Express.Multer.File) {
+    // Iniciar una transacción para garantizar consistencia
+    const queryRunner = this.expedienteRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const expedientes = [];
+      const pases = [];
+      const dependenciasCache = new Map<string, Dependencia>();
+
+      // Cargar todas las dependencias existentes al inicio
+      const existingDependencias = await queryRunner.manager.find(Dependencia);
+      for (const dep of existingDependencias) {
+        dependenciasCache.set(dep.nombre_dependencia.trim().toUpperCase(), dep);
+      }
+
+      const csvParser = require('csv-parser');
+      const fs = require('fs');
+      const stream = fs.createReadStream(file.path).pipe(csvParser());
+
+      for await (const row of stream) {
+        // Normalizar el código de dependencia
+        const codigoDependencia = row.CODIGO.trim().toUpperCase();
+        let guardarDependencia = dependenciasCache.get(codigoDependencia);
+
+        if (!guardarDependencia) {
+          // Crear nueva dependencia solo si no existe
+          guardarDependencia = queryRunner.manager.create(Dependencia, {
+            nombre_dependencia: codigoDependencia,
+            letra_identificadora: row.LETRA?.trim() || 'Z',
+          });
+          guardarDependencia = await queryRunner.manager.save(Dependencia, guardarDependencia);
+          dependenciasCache.set(codigoDependencia, guardarDependencia);
+        }
+
+        // Validar datos del expediente
+        if (!row.ANIO || !row.NRO || !row.RUTA) {
+          throw new Error(`Datos de expediente incompletos en fila: ${JSON.stringify(row)}`);
+        }
+
+        // Crear el expediente
+        const expediente = queryRunner.manager.create(Expediente, {
+          anio_expediente: this.transformarAnio(row.ANIO),
+          nro_expediente: parseInt(row.NRO, 10),
+          ruta_expediente: parseInt(row.RUTA, 10),
+          titulo_expediente: row.NOM?.trim() || 'Sin título',
+          descripcion: `${row.MOTIVO1 || ''} ${row.MOTIVO2 || ''}`.trim() || 'Sin descripción',
+          fecha_creacion: this.parsearFechaHora(row.F1, row.H1),
+          dependencia_creadora: guardarDependencia,
+        });
+
+        const savedExpediente = await queryRunner.manager.save(Expediente, expediente);
+        expedientes.push(savedExpediente);
+
+        // Procesar pases
+        for (let i = 1; i <= 25; i++) {
+          const fechaCol = row[`F${i}`];
+          const horaCol = row[`H${i}`];
+          const paseCol = row[`P${i}`];
+
+          if (fechaCol && horaCol && paseCol) {
+            const paseDependenciaCodigo = paseCol.trim().toUpperCase();
+            let destinoDependencia = dependenciasCache.get(paseDependenciaCodigo);
+
+            if (!destinoDependencia) {
+              destinoDependencia = queryRunner.manager.create(Dependencia, {
+                nombre_dependencia: paseDependenciaCodigo,
+                letra_identificadora: 'Z'
+              });
+              destinoDependencia = await queryRunner.manager.save(Dependencia, destinoDependencia);
+              dependenciasCache.set(paseDependenciaCodigo, destinoDependencia);
+            }
+
+            const pase = queryRunner.manager.create(Pase, {
+              expediente: savedExpediente,
+              fecha_hora_migracion: this.parsearFechaHora(fechaCol, horaCol),
+              destino: destinoDependencia,
+            });
+            pases.push(pase);
+          }
+        }
+      }
+
+      // Guardar todos los pases en un solo batch
+      await queryRunner.manager.save(Pase, pases);
+      
+      // Commit de la transacción
+      await queryRunner.commitTransaction();
+
+      return {
+        status: 'success',
+        expedientes: expedientes.length,
+        pases: pases.length,
+        dependencias: dependenciasCache.size
+      };
+
+    } catch (error) {
+      // Rollback en caso de error
+      await queryRunner.rollbackTransaction();
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: `Error en la migración: ${error.message}`
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
+
+    } finally {
+      // Liberar el queryRunner
+      await queryRunner.release();
+    }
   }
+
+  private parsearFechaHora(fecha: string, hora: string): Date {
+    try {
+      if (!fecha || !hora) return new Date();
+
+      const [dia, mes, anio] = fecha.split('/');
+      const fechaFormateada = `${anio}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')} ${hora}`;
+      
+      const fechaHora = new Date(fechaFormateada);
+      return isNaN(fechaHora.getTime()) ? new Date() : fechaHora;
+    } catch {
+      return new Date();
+    }
+  }
+
+  private transformarAnio(anioStr: string): number {
+    const anio = parseInt(anioStr, 10);
+    
+    if (anio >= 0 && anio <= 23) {  // Asumiendo que 0-23 representa 2000-2023
+      return 2000 + anio;
+    } else if (anio >= 24 && anio <= 99) {  // 24-99 representa 1924-1999
+      return 1900 + anio;
+    }
+    
+    return anio; // Si por alguna razón ya viene con 4 dígitos
+  }
+
+  
 }

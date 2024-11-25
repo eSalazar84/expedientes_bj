@@ -1,19 +1,26 @@
-import { Controller, Post, Body, Patch, Param, Delete, Get, Query, HttpException, HttpStatus, ValidationPipe, UsePipes, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete, Get, Query, HttpException, HttpStatus, ValidationPipe, UsePipes, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { PaseService } from './pase.service';
 import { CreatePaseDto } from './dto/create-pase.dto';
 import { UpdatePaseDto } from './dto/update-pase.dto';
 import { Pase } from './entities/pase.entity';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Rol } from 'src/auth/enums/rol.enum';
+import { Roles } from 'src/auth/guard/roles.decorator';
 
 @Controller('pases')
+@UseGuards(AuthGuard, RolesGuard)
 export class PaseController {
   constructor(private readonly paseService: PaseService) { }
 
   @Post()
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   async create(@Body() createPaseDto: CreatePaseDto): Promise<Pase> {
     return await this.paseService.createPase(createPaseDto);
   }
 
   @Get()
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN, Rol.USER)
   async findAllPase(@Query('idExpediente') idExpediente: number): Promise<CreatePaseDto[]> {
     if (!idExpediente) {
       return await this.paseService.findAllPase()
@@ -23,6 +30,7 @@ export class PaseController {
   }
 
   @Patch(':id')
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   @UsePipes(new ValidationPipe({ transform: true }))
   async updatePase(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,

@@ -13,7 +13,7 @@ export class ExpedienteController {
   constructor(private readonly expedienteService: ExpedienteService) { }
 
   @Post()
-  @Roles(Rol.ADMIN)
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   async createExpediente(@Body() createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     try {
       return await this.expedienteService.createExpediente(createExpedienteDto);
@@ -28,7 +28,7 @@ export class ExpedienteController {
     }
   }
 
-  @Roles(Rol.ADMIN, Rol.USER)
+  @Roles(Rol.ADMIN, Rol.USER, Rol.SUPER_ADMIN)
   @Get()
   async findAll(
     @Query() filters: {
@@ -54,7 +54,7 @@ export class ExpedienteController {
     }
   }
 
-  @Roles(Rol.ADMIN, Rol.USER)
+  @Roles(Rol.ADMIN, Rol.USER, Rol.SUPER_ADMIN)
   @Get(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async findOne(
@@ -73,7 +73,7 @@ export class ExpedienteController {
     }
   }
 
-  @Roles(Rol.ADMIN, Rol.USER)
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   @Patch(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async updateExpediente(
@@ -93,7 +93,7 @@ export class ExpedienteController {
     }
   }
 
-  @Roles(Rol.ADMIN)
+  @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   @Delete(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
   async removeExpediente(

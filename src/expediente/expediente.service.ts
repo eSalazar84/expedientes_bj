@@ -55,7 +55,11 @@ export class ExpedienteService {
 
   findAllExpediente(): Promise<CreateExpedienteDto[]> {
     return this.expedienteRepository.find({
-      relations: ['pases', 'dependencia_creadora']
+      relations: ['pases', 'dependencia_creadora'],
+      order: {
+        anio_expediente: 'DESC',
+        nro_expediente: 'DESC'
+      }
     });
   }
 
@@ -94,7 +98,11 @@ export class ExpedienteService {
     // Hacer la consulta con las condiciones combinadas
     const expedientes = await this.expedienteRepository.find({
       where: Object.keys(where).length ? where : undefined,  // Solo aplicar where si hay criterios
-      relations: ['dependencia_creadora', 'pases'] // Incluir relaciones
+      relations: ['dependencia_creadora', 'pases'], // Incluir relaciones
+      order: {
+        anio_expediente: 'DESC',
+        nro_expediente: 'DESC'
+      }
     });
 
     // Verificar si se encontraron expedientes
