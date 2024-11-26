@@ -53,7 +53,7 @@ export class ExpedienteService {
     return this.expedienteRepository.save(nuevoExpediente);
   }
 
-  findAllExpediente(): Promise<CreateExpedienteDto[]> {
+  async findAllExpediente(): Promise<CreateExpedienteDto[]> {
     return this.expedienteRepository.find({
       relations: ['pases', 'dependencia_creadora'],
       order: {
@@ -76,36 +76,50 @@ export class ExpedienteService {
   async findExpedienteByFilters(filters: {
     search_title_exp?: string,
     search_anio_exp?: number,
-    search_dependencia?: string
+    search_nro_exp?: number,
+    search_dependencia?: string,
+    search_letra_exp?: string
   }): Promise<CreateExpedienteDto[]> {
-    const where: FindOptionsWhere<Expediente> = {};
+    const queryBuilder = this.expedienteRepository.createQueryBuilder('expediente')
+      .innerJoinAndSelect('expediente.dependencia_creadora', 'dependencia')
+      .leftJoinAndSelect('expediente.pases', 'pases');
 
-    // Condiciones de búsqueda por título, año y dependencia
     if (filters.search_title_exp) {
-      where.titulo_expediente = ILike(`%${filters.search_title_exp}%`);
+      queryBuilder.andWhere('LOWER(expediente.titulo_expediente) LIKE LOWER(:titulo)', {
+        titulo: `%${filters.search_title_exp}%`
+      });
     }
 
     if (filters.search_anio_exp) {
-      where.anio_expediente = filters.search_anio_exp;
+      queryBuilder.andWhere('expediente.anio_expediente = :anio', {
+        anio: filters.search_anio_exp
+      });
+    }
+
+    if (filters.search_nro_exp) {
+      queryBuilder.andWhere('expediente.nro_expediente = :nro', {
+        nro: filters.search_nro_exp
+      });
     }
 
     if (filters.search_dependencia) {
-      where.dependencia_creadora = {
-        nombre_dependencia: ILike(`%${filters.search_dependencia}%`)
-      };
+      queryBuilder.andWhere('LOWER(dependencia.nombre_dependencia) = LOWER(:nombre)', {
+        nombre: filters.search_dependencia.trim()
+      });
     }
 
-    // Hacer la consulta con las condiciones combinadas
-    const expedientes = await this.expedienteRepository.find({
-      where: Object.keys(where).length ? where : undefined,  // Solo aplicar where si hay criterios
-      relations: ['dependencia_creadora', 'pases'], // Incluir relaciones
-      order: {
-        anio_expediente: 'DESC',
-        nro_expediente: 'DESC'
-      }
-    });
+    if (filters.search_letra_exp) {
+      queryBuilder.andWhere('UPPER(dependencia.letra_identificadora) = UPPER(:letra)', {
+        letra: filters.search_letra_exp.trim()
+      });
+    }
 
-    // Verificar si se encontraron expedientes
+    queryBuilder
+      .orderBy('expediente.anio_expediente', 'DESC')
+      .addOrderBy('expediente.nro_expediente', 'DESC');
+
+    const expedientes = await queryBuilder.getMany();
+
     if (expedientes.length === 0) {
       throw new HttpException('No existen expedientes con ese criterio', HttpStatus.NOT_FOUND);
     }
