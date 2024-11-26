@@ -34,7 +34,9 @@ export class ExpedienteController {
     @Query() filters: {
       search_title_exp?: string,
       search_anio_exp?: number,
-      search_dependencia?: string
+      search_dependencia?: string,
+      search_letra_exp?: string,
+      search_nro_exp?: number
     }
   ): Promise<CreateExpedienteDto[]> {
     try {
@@ -51,6 +53,30 @@ export class ExpedienteController {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         error: `Ocurrio un error inesperado.`
       }, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  @Get('buscar')
+  @Roles(Rol.ADMIN, Rol.USER, Rol.SUPER_ADMIN)
+  async findExpedienteByIdentificacion(
+    @Query('search_nro_exp', ParseIntPipe) nroExpediente: number,
+    @Query('search_anio_exp', ParseIntPipe) anioExpediente: number,
+    @Query('search_letra_exp') letraExpediente: string
+  ): Promise<CreateExpedienteDto> {
+    try {
+      return await this.expedienteService.findOneExpedienteByFilters(
+        nroExpediente,
+        anioExpediente,
+        letraExpediente
+      );
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error al buscar el expediente',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -101,4 +127,5 @@ export class ExpedienteController {
   ): Promise<void> {
     return this.expedienteService.removeExpediente(id);
   }
+
 }

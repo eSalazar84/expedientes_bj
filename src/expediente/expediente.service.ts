@@ -16,7 +16,7 @@ export class ExpedienteService {
     private readonly dependenciaRepository: Repository<Dependencia>,
   ) { }
 
-  async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
+  /* async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
 
     // Buscar la dependencia por ID
@@ -51,6 +51,81 @@ export class ExpedienteService {
 
     // Guardar el expediente en la base de datos
     return this.expedienteRepository.save(nuevoExpediente);
+  } */
+
+  async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
+    const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
+
+    // Buscar la dependencia por ID
+    const dependencia = await this.dependenciaRepository.findOne({
+      where: { idDependencia: dependenciaId }
+    });
+
+    if (!dependencia) {
+      throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
+    }
+
+    const letraIdentificadora = dependencia.letra_identificadora;
+    if (!letraIdentificadora) {
+      throw new HttpException(
+        'La dependencia no tiene letra identificadora asignada',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // Obtener el año actual
+    const anioActual = new Date().getFullYear();
+
+    // Buscar el último expediente con la misma letra para el año actual
+    const ultimoExpediente = await this.expedienteRepository
+      .createQueryBuilder('expediente')
+      .innerJoin('expediente.dependencia_creadora', 'dependencia')
+      .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+      .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
+      .orderBy('expediente.nro_expediente', 'DESC')
+      .getOne();
+
+    // Calcular el próximo número de expediente
+    const nuevoNroExpediente = ultimoExpediente ? ultimoExpediente.nro_expediente + 1 : 1;
+
+    // Validación adicional para asegurar que no exista el número
+    const existeExpediente = await this.expedienteRepository
+        .createQueryBuilder('expediente')
+        .innerJoin('expediente.dependencia_creadora', 'dependencia')
+        .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+        .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
+        .andWhere('expediente.nro_expediente = :nro', { nro: nuevoNroExpediente })
+        .getOne();
+
+    if (existeExpediente) {
+        throw new HttpException(
+            `Ya existe un expediente con número ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`,
+            HttpStatus.CONFLICT
+        );
+    }
+
+    // Crear el nuevo expediente
+    const nuevoExpediente = this.expedienteRepository.create({
+      anio_expediente: anioActual,
+      ruta_expediente: 1,
+      nro_expediente: nuevoNroExpediente,
+      titulo_expediente,
+      descripcion,
+      dependencia_creadora: dependencia
+    });
+
+    try {
+      const expedienteGuardado = await this.expedienteRepository.save(nuevoExpediente);
+
+      console.log(`Expediente creado: ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`);
+
+      return expedienteGuardado;
+    } catch (error) {
+      throw new HttpException(
+        'Error al crear el expediente',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   async findAllExpediente(): Promise<CreateExpedienteDto[]> {
@@ -71,6 +146,32 @@ export class ExpedienteService {
       error: `No existe el expediente que esta buscando`
     }, HttpStatus.NOT_FOUND)
     return expedienteFound;
+  }
+
+  async findOneExpedienteByFilters(
+    nroExpediente: number,
+    anioExpediente: number,
+    letraExpediente: string
+  ): Promise<Expediente> {
+    const expediente = await this.expedienteRepository
+      .createQueryBuilder('expediente')
+      .innerJoinAndSelect('expediente.dependencia_creadora', 'dependencia')
+      .leftJoinAndSelect('expediente.pases', 'pases')
+      .where('expediente.nro_expediente = :nro', { nro: nroExpediente })
+      .andWhere('expediente.anio_expediente = :anio', { anio: anioExpediente })
+      .andWhere('UPPER(dependencia.letra_identificadora) = UPPER(:letra)', {
+        letra: letraExpediente.trim()
+      })
+      .getOne();
+
+    if (!expediente) {
+      throw new HttpException(
+        `No se encontró el expediente ${letraExpediente}-${nroExpediente}/${anioExpediente}`,
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    return expediente;
   }
 
   async findExpedienteByFilters(filters: {
