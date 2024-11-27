@@ -1,22 +1,24 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MigrationModule } from './migration/migration.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { DependenciaModule } from './organigrama/dependencia.module';
 import { ExpedienteModule } from './expediente/expediente.module';
 import { PaseModule } from './pase/pase.module';
+import { DB_TYPE, HOST, PORT, USER_DB_NAME, USER_DB_PASSWORD, DATABASE_NAME } from 'config'
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: 'root',
-      database: 'prueba_exp',
+      type: DB_TYPE,
+      host: HOST,
+      port: PORT,
+      username: USER_DB_NAME,
+      password: USER_DB_PASSWORD,
+      database: DATABASE_NAME,
       entities: [
         join(__dirname, '/**/*.entity{.ts,.js}')
       ],
@@ -25,9 +27,10 @@ import { PaseModule } from './pase/pase.module';
     MigrationModule,
     DependenciaModule,
     ExpedienteModule,
-    PaseModule
+    PaseModule,
+    AuthModule
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule { }

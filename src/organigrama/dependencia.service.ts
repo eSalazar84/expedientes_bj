@@ -4,14 +4,21 @@ import { UpdateDependenciaDto } from './dto/update-dependencia.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Dependencia } from './entities/dependencia.entity';
 import { FindOneOptions, Repository } from 'typeorm';
-import { error } from 'console';
+import { Expediente } from 'src/expediente/entities/expediente.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DependenciaService {
   constructor(
     @InjectRepository(Dependencia)
-    private readonly dependenciaRepository: Repository<CreateDependenciaDto>
+    private readonly dependenciaRepository: Repository<Dependencia>
   ) { }
+
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    return hashedPassword;
+  }
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
     // Normalizar el valor ingresado por el usuario
@@ -33,11 +40,25 @@ export class DependenciaService {
     // Crear una nueva dependencia con el nombre normalizado
     const newDependencia = this.dependenciaRepository.create({
       ...createDependenciaDto,
+      letra_identificadora: createDependenciaDto.letra_identificadora.trim().toUpperCase(),
       nombre_dependencia: dependenciaNormalizada,  // Guardar el nombre normalizado
     });
 
     // Guardar la nueva dependencia en la base de datos
     return await this.dependenciaRepository.save(newDependencia);
+  }
+
+  async findOneDependencia(id: number): Promise<Dependencia> {
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+    return dependenciaFound;
   }
 
   async findAllDependencia(): Promise<CreateDependenciaDto[]> {
@@ -64,18 +85,35 @@ export class DependenciaService {
   }
 
   async updateDependencia(id: number, updateDependenciaDto: UpdateDependenciaDto): Promise<UpdateDependenciaDto> {
-    const queryFound: FindOneOptions = { where: { id: id } }
-    const productFound = await this.dependenciaRepository.findOne(queryFound)
-    if (!productFound) throw new HttpException({
-      status: HttpStatus.NOT_FOUND,
-      error: `No existe un producto con el id ${id}`
-    }, HttpStatus.NOT_FOUND)
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+
+    if (updateDependenciaDto.password) {
+      updateDependenciaDto.password = await this.hashPassword(updateDependenciaDto.password);
+    }
     
-    const updateUser = Object.assign(productFound, updateDependenciaDto)
-    return this.dependenciaRepository.save(updateUser)
+    const updateDependencia = Object.assign(dependenciaFound, updateDependenciaDto)
+
+    return this.dependenciaRepository.save(updateDependencia)
   }
 
-  removeDependencia(id: number) {
-    return `This action removes a #${id} Dependencia`;
+  async removeDependencia(id: number) {
+    const dependenciaFound = await this.dependenciaRepository.findOne({
+      where: { idDependencia: id }
+    })
+    if (!dependenciaFound) {
+      throw new HttpException({
+        status: HttpStatus.CONFLICT,
+        error: `no existe una dependencia con ese Id`,
+      }, HttpStatus.CONFLICT);
+    }
+    return this.dependenciaRepository.delete(id)
   }
 }
