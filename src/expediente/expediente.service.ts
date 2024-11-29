@@ -4,7 +4,7 @@ import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
 import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { Brackets, FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 
 @Injectable()
@@ -225,6 +225,35 @@ export class ExpedienteService {
       throw new HttpException('No existen expedientes con ese criterio', HttpStatus.NOT_FOUND);
     }
 
+    return expedientes;
+  }
+
+  async findExpedientesByDependencia(dependenciaId: number): Promise<Expediente[]> {
+    const expedientes = await this.expedienteRepository
+      .createQueryBuilder('expediente')
+      .leftJoinAndSelect('expediente.dependencia_creadora', 'dependencia_creadora')
+      .leftJoinAndSelect('expediente.pases', 'pases')
+      .leftJoinAndSelect('pases.destino', 'pase_destino')
+      .where(new Brackets(qb => {
+        qb.where('dependencia_creadora.idDependencia = :depId', { depId: dependenciaId })
+          .orWhere(
+            'EXISTS (SELECT 1 FROM pase p ' +
+            'WHERE p.expedienteId = expediente.idExpediente ' +
+            'AND p.destinoId = :depId)',
+            { depId: dependenciaId }
+          );
+      }))
+      .orderBy('expediente.anio_expediente', 'DESC')
+      .addOrderBy('expediente.nro_expediente', 'DESC')
+      .getMany();
+  
+    if (expedientes.length === 0) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'No se encontraron expedientes para esta dependencia'
+      }, HttpStatus.NOT_FOUND);
+    }
+  
     return expedientes;
   }
 

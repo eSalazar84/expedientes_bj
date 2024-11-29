@@ -99,6 +99,13 @@ export class ExpedienteController {
     }
   }
 
+  @Get('dependencia/:id')
+  async findExpedientesByDependencia(
+    @Param('id', ParseIntPipe) dependenciaId: number
+  ): Promise<CreateExpedienteDto[]> {
+    return this.expedienteService.findExpedientesByDependencia(dependenciaId);
+  }
+
   @Roles(Rol.ADMIN, Rol.SUPER_ADMIN)
   @Patch(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
