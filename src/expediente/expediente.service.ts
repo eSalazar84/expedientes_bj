@@ -16,43 +16,6 @@ export class ExpedienteService {
     private readonly dependenciaRepository: Repository<Dependencia>,
   ) { }
 
-  /* async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
-    const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
-
-    // Buscar la dependencia por ID
-    const dependencia = await this.dependenciaRepository.findOne({
-      where: { idDependencia: dependenciaId }
-    });
-    if (!dependencia) {
-      throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
-    }
-
-    // Obtener el año actual y contar los expedientes existentes para la dependencia en este año
-    const anioActual = new Date().getFullYear();
-    const expedientesAnioActual = await this.expedienteRepository.count({
-      where: {
-        dependencia_creadora: dependencia,
-        anio_expediente: anioActual,
-      },
-    });
-
-    // Asignar el próximo número de expediente para la dependencia en este año
-    const nuevoNroExpediente = expedientesAnioActual + 1;
-
-    // Crear el nuevo expediente con el número de expediente calculado
-    const nuevoExpediente = this.expedienteRepository.create({
-      anio_expediente: anioActual,
-      ruta_expediente: 1,
-      nro_expediente: nuevoNroExpediente,  // asignar el número aquí
-      titulo_expediente,
-      descripcion,
-      dependencia_creadora: dependencia
-    });
-
-    // Guardar el expediente en la base de datos
-    return this.expedienteRepository.save(nuevoExpediente);
-  } */
-
   async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
 
@@ -65,7 +28,21 @@ export class ExpedienteService {
       throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
     }
 
-    const letraIdentificadora = dependencia.letra_identificadora;
+    let letraIdentificadora = dependencia.letra_identificadora;
+
+    // Verificar si la letra es variable
+    if (dependencia.letra_es_variable) {
+      // Asegurarse de que el título no esté vacío
+      if (!titulo_expediente || titulo_expediente.trim().length === 0) {
+        throw new HttpException(
+          'El título del expediente no puede estar vacío cuando la letra es variable',
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      // Tomar la primera letra del título del expediente
+      letraIdentificadora = titulo_expediente.charAt(0).toUpperCase(); // Asegurarse de que sea mayúscula
+    }
+
     if (!letraIdentificadora) {
       throw new HttpException(
         'La dependencia no tiene letra identificadora asignada',
@@ -90,18 +67,18 @@ export class ExpedienteService {
 
     // Validación adicional para asegurar que no exista el número
     const existeExpediente = await this.expedienteRepository
-        .createQueryBuilder('expediente')
-        .innerJoin('expediente.dependencia_creadora', 'dependencia')
-        .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
-        .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
-        .andWhere('expediente.nro_expediente = :nro', { nro: nuevoNroExpediente })
-        .getOne();
+      .createQueryBuilder('expediente')
+      .innerJoin('expediente.dependencia_creadora', 'dependencia')
+      .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+      .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
+      .andWhere('expediente.nro_expediente = :nro', { nro: nuevoNroExpediente })
+      .getOne();
 
     if (existeExpediente) {
-        throw new HttpException(
-            `Ya existe un expediente con número ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`,
-            HttpStatus.CONFLICT
-        );
+      throw new HttpException(
+        `Ya existe un expediente con número ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`,
+        HttpStatus.CONFLICT
+      );
     }
 
     // Crear el nuevo expediente
@@ -116,9 +93,7 @@ export class ExpedienteService {
 
     try {
       const expedienteGuardado = await this.expedienteRepository.save(nuevoExpediente);
-
       console.log(`Expediente creado: ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`);
-
       return expedienteGuardado;
     } catch (error) {
       throw new HttpException(
@@ -246,14 +221,14 @@ export class ExpedienteService {
       .orderBy('expediente.anio_expediente', 'DESC')
       .addOrderBy('expediente.nro_expediente', 'DESC')
       .getMany();
-  
+
     if (expedientes.length === 0) {
       throw new HttpException({
         status: HttpStatus.NOT_FOUND,
         error: 'No se encontraron expedientes para esta dependencia'
       }, HttpStatus.NOT_FOUND);
     }
-  
+
     return expedientes;
   }
 

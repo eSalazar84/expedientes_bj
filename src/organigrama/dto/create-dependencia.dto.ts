@@ -22,9 +22,9 @@ export class CreateDependenciaDto {
 
     @IsOptional()
     @IsString()
-    @Length(1, 1)
-    @Matches(/^[A-Za-z]$/, {
-        message: 'La letra identificadora debe ser una única letra del alfabeto'
+    @Length(0, 1)
+    @Matches(/^[A-Za-z]?$/, { // Permitir una letra o vacío
+        message: 'La letra identificadora debe ser una única letra del alfabeto o estar vacía'
     })
     letra_identificadora: string
 
