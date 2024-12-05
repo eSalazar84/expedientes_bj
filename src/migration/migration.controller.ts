@@ -18,10 +18,7 @@ export class MigrationController {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
       },
-    }),
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB en bytes
-    }
+    })
   }))
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<{ status: number, message: string }> {
     if (!file) throw new HttpException({
