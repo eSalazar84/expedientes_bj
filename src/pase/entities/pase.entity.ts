@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Expediente } from "../../expediente/entities/expediente.entity";
-import { Dependencia } from "src/organigrama/entities/dependencia.entity";
+import { Dependencia } from "src/dependencia/entities/dependencia.entity";
 
 @Entity()
 export class Pase {

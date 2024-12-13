@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Length, Matches } from "class-validator"
 import { Rol } from "src/auth/enums/rol.enum"
 
 export class CreateDependenciaDto {
@@ -27,6 +27,10 @@ export class CreateDependenciaDto {
         message: 'La letra identificadora debe ser una única letra del alfabeto o estar vacía'
     })
     letra_identificadora: string
+
+    @IsBoolean()
+    @IsOptional()
+    letra_es_variable: boolean
 
     @IsNumber()
     @IsOptional()

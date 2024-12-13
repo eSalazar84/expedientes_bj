@@ -3,7 +3,7 @@ import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
-import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
+import { Dependencia } from 'src/dependencia/entities/dependencia.entity';
 import { Brackets, FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 

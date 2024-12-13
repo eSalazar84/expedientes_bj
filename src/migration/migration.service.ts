@@ -3,7 +3,7 @@ import { Expediente } from '../expediente/entities/expediente.entity';
 import { Pase } from '../pase/entities/pase.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
+import { Dependencia } from 'src/dependencia/entities/dependencia.entity';
 
 
 @Injectable()

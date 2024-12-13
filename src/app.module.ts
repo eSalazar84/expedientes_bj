@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MigrationModule } from './migration/migration.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
-import { DependenciaModule } from './organigrama/dependencia.module';
+import { DependenciaModule } from './dependencia/dependencia.module';
 import { ExpedienteModule } from './expediente/expediente.module';
 import { PaseModule } from './pase/pase.module';
 import { DB_TYPE, HOST, PORT, USER_DB_NAME, USER_DB_PASSWORD, DATABASE_NAME } from 'config'
