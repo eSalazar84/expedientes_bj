@@ -13,6 +13,9 @@ export class Expediente {
     @Column({ type: 'int' })
     nro_expediente: number
 
+    @Column({ type: 'varchar', length: 1 })
+    letra_expediente_migracion: string
+
     @Column({ type: 'int' })
     ruta_expediente: number
 

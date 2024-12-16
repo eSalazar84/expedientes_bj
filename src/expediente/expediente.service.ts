@@ -109,6 +109,7 @@ export class ExpedienteService {
     const nuevoExpediente = this.expedienteRepository.create({
       anio_expediente: anioActual,
       ruta_expediente: 1,
+      letra_expediente_migracion: letraIdentificadora,
       nro_expediente: nuevoNroExpediente,
       titulo_expediente,
       descripcion,
@@ -117,6 +118,7 @@ export class ExpedienteService {
 
     try {
       const expedienteGuardado = await this.expedienteRepository.save(nuevoExpediente);
+  
       return expedienteGuardado;
     } catch (error) {
       throw new HttpException(

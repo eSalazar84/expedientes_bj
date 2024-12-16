@@ -7,8 +7,8 @@ export class Pase {
     @PrimaryGeneratedColumn()
     idPase: number
 
-    @Column({ type: 'datetime', nullable: true })
-    fecha_hora_migracion: Date | null
+    /* @Column({ type: 'datetime', nullable: true })
+    fecha_hora_migracion: Date | null */
 
     @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     fecha_pase: Date

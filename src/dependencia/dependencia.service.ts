@@ -22,7 +22,7 @@ export class DependenciaService {
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
     // Normalizar el valor ingresado por el usuario
-    const dependenciaNormalizada = createDependenciaDto.nombre_dependencia.trim().toUpperCase();
+    const dependenciaNormalizada = createDependenciaDto.nombre_dependencia.trim();
 
     // Buscar la dependencia con el nombre normalizado
     const DependenciaFound = await this.dependenciaRepository.findOne({

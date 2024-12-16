@@ -1,15 +1,21 @@
-import { Controller, Post, UseInterceptors, UploadedFile, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, HttpStatus, HttpException, UseGuards } from '@nestjs/common';
 import { MigrationService } from './migration.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { extname } from 'path';
 import * as fs from 'fs'
+import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/guard/roles.decorator';
+import { Rol } from 'src/auth/enums/rol.enum';
 
 
 @Controller('migration')
 export class MigrationController {
   constructor(private readonly migrationService: MigrationService) { }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Rol.SUPER_ADMIN)
   @Post('upload')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
