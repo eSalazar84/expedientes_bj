@@ -21,8 +21,7 @@ import { ConfigModule } from '@nestjs/config';
       database: DATABASE_NAME,
       entities: [
         join(__dirname, '/**/*.entity{.ts,.js}')
-      ],
-      synchronize: true
+      ]
     }),
     MigrationModule,
     DependenciaModule,

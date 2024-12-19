@@ -118,7 +118,7 @@ export class ExpedienteService {
 
     try {
       const expedienteGuardado = await this.expedienteRepository.save(nuevoExpediente);
-  
+
       return expedienteGuardado;
     } catch (error) {
       throw new HttpException(
@@ -223,7 +223,8 @@ export class ExpedienteService {
     }
 
     queryBuilder
-      .orderBy('expediente.anio_expediente', 'DESC')
+      .orderBy('expediente.fecha_creacion', 'DESC')
+      .addOrderBy('expediente.dependencia_creadora', 'DESC')
       .addOrderBy('expediente.nro_expediente', 'DESC');
 
     const expedientes = await queryBuilder.getMany();

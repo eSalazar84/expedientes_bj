@@ -6,6 +6,8 @@ import { Dependencia } from './entities/dependencia.entity';
 import { FindOneOptions, Repository } from 'typeorm';
 import { Expediente } from 'src/expediente/entities/expediente.entity';
 import * as bcrypt from 'bcrypt';
+import { Rol } from 'src/auth/enums/rol.enum';
+import { error } from 'console';
 
 @Injectable()
 export class DependenciaService {
@@ -18,6 +20,19 @@ export class DependenciaService {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     return hashedPassword;
+  }
+
+  async finByRole(rol: Rol): Promise<CreateDependenciaDto | null> {
+    return this.dependenciaRepository.findOne({
+      where: {
+        rol: rol
+      }
+    })
+  }
+
+  async createInitialUser(data: Partial<CreateDependenciaDto>): Promise<CreateDependenciaDto> {
+    const newDependencia = this.dependenciaRepository.create(data)
+    return this.dependenciaRepository.save(newDependencia)
   }
 
   async createDependencia(createDependenciaDto: CreateDependenciaDto): Promise<CreateDependenciaDto> {
@@ -98,7 +113,7 @@ export class DependenciaService {
     if (updateDependenciaDto.password) {
       updateDependenciaDto.password = await this.hashPassword(updateDependenciaDto.password);
     }
-    
+
     const updateDependencia = Object.assign(dependenciaFound, updateDependenciaDto)
 
     return this.dependenciaRepository.save(updateDependencia)
@@ -113,6 +128,19 @@ export class DependenciaService {
         status: HttpStatus.CONFLICT,
         error: `no existe una dependencia con ese Id`,
       }, HttpStatus.CONFLICT);
+    }
+
+    const superAdminCount = await this.dependenciaRepository.count({
+      where: {
+        rol: Rol.SUPER_ADMIN
+      }
+    })
+
+    if (dependenciaFound && superAdminCount <= 1) {
+      throw new HttpException({
+        status: HttpStatus.FORBIDDEN,
+        error: `Debe existir al menos una dependencia con rol SUPERADMIN`
+      }, HttpStatus.FORBIDDEN)
     }
     return this.dependenciaRepository.delete(id)
   }
