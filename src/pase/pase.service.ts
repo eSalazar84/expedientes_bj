@@ -4,7 +4,7 @@ import { UpdatePaseDto } from './dto/update-pase.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pase } from './entities/pase.entity';
 import { Repository } from 'typeorm';
-import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
+import { Dependencia } from 'src/dependencia/entities/dependencia.entity';
 import { Expediente } from 'src/expediente/entities/expediente.entity';
 
 @Injectable()

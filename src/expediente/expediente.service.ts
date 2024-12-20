@@ -3,8 +3,8 @@ import { CreateExpedienteDto } from './dto/create-expediente.dto';
 import { UpdateExpedienteDto } from './dto/update-expediente.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Expediente } from './entities/expediente.entity';
-import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
-import { FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { Dependencia } from 'src/dependencia/entities/dependencia.entity';
+import { Brackets, FindOneOptions, FindOptionsWhere, ILike, Repository } from 'typeorm';
 
 
 @Injectable()
@@ -16,42 +16,19 @@ export class ExpedienteService {
     private readonly dependenciaRepository: Repository<Dependencia>,
   ) { }
 
-  /* async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
-    const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
-
-    // Buscar la dependencia por ID
-    const dependencia = await this.dependenciaRepository.findOne({
-      where: { idDependencia: dependenciaId }
-    });
-    if (!dependencia) {
-      throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
+  // Función auxiliar para procesar la letra identificadora
+  private processLetraIdentificadora(expediente: Expediente): void {
+    if (expediente.dependencia_creadora?.letra_es_variable) {
+      expediente.dependencia_creadora.letra_identificadora =
+        expediente.titulo_expediente.charAt(0).toUpperCase();
     }
+  }
 
-    // Obtener el año actual y contar los expedientes existentes para la dependencia en este año
-    const anioActual = new Date().getFullYear();
-    const expedientesAnioActual = await this.expedienteRepository.count({
-      where: {
-        dependencia_creadora: dependencia,
-        anio_expediente: anioActual,
-      },
-    });
-
-    // Asignar el próximo número de expediente para la dependencia en este año
-    const nuevoNroExpediente = expedientesAnioActual + 1;
-
-    // Crear el nuevo expediente con el número de expediente calculado
-    const nuevoExpediente = this.expedienteRepository.create({
-      anio_expediente: anioActual,
-      ruta_expediente: 1,
-      nro_expediente: nuevoNroExpediente,  // asignar el número aquí
-      titulo_expediente,
-      descripcion,
-      dependencia_creadora: dependencia
-    });
-
-    // Guardar el expediente en la base de datos
-    return this.expedienteRepository.save(nuevoExpediente);
-  } */
+  // Método para procesar array de expedientes
+  private processExpedientes(expedientes: Expediente[]): Expediente[] {
+    expedientes.forEach(exp => this.processLetraIdentificadora(exp));
+    return expedientes;
+  }
 
   async createExpediente(createExpedienteDto: CreateExpedienteDto): Promise<CreateExpedienteDto> {
     const { dependenciaId, titulo_expediente, descripcion } = createExpedienteDto;
@@ -65,12 +42,24 @@ export class ExpedienteService {
       throw new HttpException('Dependencia no encontrada', HttpStatus.NOT_FOUND);
     }
 
-    const letraIdentificadora = dependencia.letra_identificadora;
-    if (!letraIdentificadora) {
-      throw new HttpException(
-        'La dependencia no tiene letra identificadora asignada',
-        HttpStatus.BAD_REQUEST
-      );
+    // Determinar la letra identificadora
+    let letraIdentificadora: string;
+    if (dependencia.letra_es_variable) {
+      if (!titulo_expediente || titulo_expediente.trim().length === 0) {
+        throw new HttpException(
+          'El título del expediente no puede estar vacío cuando la letra es variable',
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      letraIdentificadora = titulo_expediente.charAt(0).toUpperCase();
+    } else {
+      if (!dependencia.letra_identificadora) {
+        throw new HttpException(
+          'La dependencia no tiene letra identificadora asignada',
+          HttpStatus.BAD_REQUEST
+        );
+      }
+      letraIdentificadora = dependencia.letra_identificadora;
     }
 
     // Obtener el año actual
@@ -80,7 +69,13 @@ export class ExpedienteService {
     const ultimoExpediente = await this.expedienteRepository
       .createQueryBuilder('expediente')
       .innerJoin('expediente.dependencia_creadora', 'dependencia')
-      .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+      .where(new Brackets(qb => {
+        qb.where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+          .orWhere(
+            'dependencia.letra_es_variable = true AND UPPER(SUBSTRING(expediente.titulo_expediente, 1, 1)) = :letra',
+            { letra: letraIdentificadora }
+          );
+      }))
       .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
       .orderBy('expediente.nro_expediente', 'DESC')
       .getOne();
@@ -90,24 +85,31 @@ export class ExpedienteService {
 
     // Validación adicional para asegurar que no exista el número
     const existeExpediente = await this.expedienteRepository
-        .createQueryBuilder('expediente')
-        .innerJoin('expediente.dependencia_creadora', 'dependencia')
-        .where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
-        .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
-        .andWhere('expediente.nro_expediente = :nro', { nro: nuevoNroExpediente })
-        .getOne();
+      .createQueryBuilder('expediente')
+      .innerJoin('expediente.dependencia_creadora', 'dependencia')
+      .where(new Brackets(qb => {
+        qb.where('dependencia.letra_identificadora = :letra', { letra: letraIdentificadora })
+          .orWhere(
+            'dependencia.letra_es_variable = true AND UPPER(SUBSTRING(expediente.titulo_expediente, 1, 1)) = :letra',
+            { letra: letraIdentificadora }
+          );
+      }))
+      .andWhere('expediente.anio_expediente = :anio', { anio: anioActual })
+      .andWhere('expediente.nro_expediente = :nro', { nro: nuevoNroExpediente })
+      .getOne();
 
     if (existeExpediente) {
-        throw new HttpException(
-            `Ya existe un expediente con número ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`,
-            HttpStatus.CONFLICT
-        );
+      throw new HttpException(
+        `Ya existe un expediente con número ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`,
+        HttpStatus.CONFLICT
+      );
     }
 
     // Crear el nuevo expediente
     const nuevoExpediente = this.expedienteRepository.create({
       anio_expediente: anioActual,
       ruta_expediente: 1,
+      letra_expediente_migracion: letraIdentificadora,
       nro_expediente: nuevoNroExpediente,
       titulo_expediente,
       descripcion,
@@ -116,8 +118,6 @@ export class ExpedienteService {
 
     try {
       const expedienteGuardado = await this.expedienteRepository.save(nuevoExpediente);
-
-      console.log(`Expediente creado: ${letraIdentificadora}-${nuevoNroExpediente}/${anioActual}`);
 
       return expedienteGuardado;
     } catch (error) {
@@ -129,23 +129,30 @@ export class ExpedienteService {
   }
 
   async findAllExpediente(): Promise<CreateExpedienteDto[]> {
-    return this.expedienteRepository.find({
+    const expedientes = await this.expedienteRepository.find({
       relations: ['pases', 'dependencia_creadora'],
       order: {
         anio_expediente: 'DESC',
         nro_expediente: 'DESC'
       }
     });
+    return this.processExpedientes(expedientes);
   }
 
   async findOneExpediente(id: number): Promise<CreateExpedienteDto> {
-    const query: FindOneOptions = { where: { idExpediente: id }, relations: ['pases', 'dependencia_creadora'] }
-    const expedienteFound = await this.expedienteRepository.findOne(query)
-    if (!expedienteFound) throw new HttpException({
-      status: HttpStatus.NOT_FOUND,
-      error: `No existe el expediente que esta buscando`
-    }, HttpStatus.NOT_FOUND)
-    return expedienteFound;
+    const query: FindOneOptions = {
+      where: { idExpediente: id },
+      relations: ['pases', 'dependencia_creadora']
+    };
+    const expediente = await this.expedienteRepository.findOne(query);
+    if (!expediente) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: `No existe el expediente que esta buscando`
+      }, HttpStatus.NOT_FOUND);
+    }
+    this.processLetraIdentificadora(expediente);
+    return expediente;
   }
 
   async findOneExpedienteByFilters(
@@ -216,7 +223,8 @@ export class ExpedienteService {
     }
 
     queryBuilder
-      .orderBy('expediente.anio_expediente', 'DESC')
+      .orderBy('expediente.fecha_creacion', 'DESC')
+      .addOrderBy('expediente.dependencia_creadora', 'DESC')
       .addOrderBy('expediente.nro_expediente', 'DESC');
 
     const expedientes = await queryBuilder.getMany();
@@ -225,7 +233,36 @@ export class ExpedienteService {
       throw new HttpException('No existen expedientes con ese criterio', HttpStatus.NOT_FOUND);
     }
 
-    return expedientes;
+    return this.processExpedientes(expedientes);
+  }
+
+  async findExpedientesByDependencia(dependenciaId: number): Promise<Expediente[]> {
+    const expedientes = await this.expedienteRepository
+      .createQueryBuilder('expediente')
+      .leftJoinAndSelect('expediente.dependencia_creadora', 'dependencia_creadora')
+      .leftJoinAndSelect('expediente.pases', 'pases')
+      .leftJoinAndSelect('pases.destino', 'pase_destino')
+      .where(new Brackets(qb => {
+        qb.where('dependencia_creadora.idDependencia = :depId', { depId: dependenciaId })
+          .orWhere(
+            'EXISTS (SELECT 1 FROM pase p ' +
+            'WHERE p.expedienteId = expediente.idExpediente ' +
+            'AND p.destinoId = :depId)',
+            { depId: dependenciaId }
+          );
+      }))
+      .orderBy('expediente.anio_expediente', 'DESC')
+      .addOrderBy('expediente.nro_expediente', 'DESC')
+      .getMany();
+
+    if (expedientes.length === 0) {
+      throw new HttpException({
+        status: HttpStatus.NOT_FOUND,
+        error: 'No se encontraron expedientes para esta dependencia'
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    return this.processExpedientes(expedientes);
   }
 
   async updateExpediente(id: number, updateExpedienteDto: UpdateExpedienteDto): Promise<CreateExpedienteDto> {

@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Pase } from "../../pase/entities/pase.entity";
-import { Dependencia } from "src/organigrama/entities/dependencia.entity";
+import { Dependencia } from "src/dependencia/entities/dependencia.entity";
 
 @Entity()
 export class Expediente {
@@ -12,6 +12,9 @@ export class Expediente {
 
     @Column({ type: 'int' })
     nro_expediente: number
+
+    @Column({ type: 'varchar', length: 1 })
+    letra_expediente_migracion: string
 
     @Column({ type: 'int' })
     ruta_expediente: number

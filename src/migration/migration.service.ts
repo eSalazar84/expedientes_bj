@@ -3,7 +3,7 @@ import { Expediente } from '../expediente/entities/expediente.entity';
 import { Pase } from '../pase/entities/pase.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Dependencia } from 'src/organigrama/entities/dependencia.entity';
+import { Dependencia } from 'src/dependencia/entities/dependencia.entity';
 
 
 @Injectable()
@@ -282,6 +282,7 @@ export class MigrationService {
         const expediente = queryRunner.manager.create(Expediente, {
           anio_expediente: this.transformarAnio(row.ANIO),
           nro_expediente: parseInt(row.NRO, 10),
+          letra_expediente_migracion: row.LETRA?.trim() || 'N/A',
           ruta_expediente: parseInt(row.RUTA, 10),
           titulo_expediente: row.NOM?.trim() || 'Sin título',
           descripcion: `${row.MOTIVO1 || ''} ${row.MOTIVO2 || ''}`.trim() || 'Sin descripción',
@@ -313,7 +314,7 @@ export class MigrationService {
 
             const pase = queryRunner.manager.create(Pase, {
               expediente: savedExpediente,
-              fecha_hora_migracion: this.parsearFechaHora(fechaCol, horaCol),
+              fecha_pase: this.parsearFechaHora(fechaCol, horaCol),
               destino: destinoDependencia,
             });
             pases.push(pase);
