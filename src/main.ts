@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DependenciaService } from './dependencia/dependencia.service';
 import { Rol } from './auth/enums/rol.enum';
 import * as bcrypt from "bcrypt";
-import { SUPERADMIN_DEPENDENCIA, SUPERADMIN_EMAIL, USER_DB_PASSWORD } from "config";
+import { SUPERADMIN_DEPENDENCIA, SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD } from "config";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,9 +23,9 @@ async function bootstrap() {
 
   if (!superAdminDependencia) {
     console.log(`No SUPERADMIN found. Creating one....`);
-    const dependenciaNombre = process.env.SUPERADMIN_DEPENDENCIA;
-    const dependenciaEmail = process.env.SUPERADMIN_EMAIL;
-    const dependenciaPass = process.env.SUPERADMIN_PASSWORD;
+    const dependenciaNombre = SUPERADMIN_DEPENDENCIA;
+    const dependenciaEmail = SUPERADMIN_EMAIL;
+    const dependenciaPass = SUPERADMIN_PASSWORD;
 
     await dependenciaService.createInitialUser({
       nombre_dependencia: dependenciaNombre,
